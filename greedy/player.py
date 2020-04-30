@@ -59,9 +59,11 @@ class ExamplePlayer:
         against the game rules).
         """
         # TODO: Update state representation in response to action.
-        current_player = [[1,0,7], [1,1,7],   [1,3,7], [1,4,7],   [1,6,7], [1,7,7],
-                          [1,0,6], [1,1,6],   [1,3,6], [1,4,6],   [1,6,6], [1,7,6]]
-        current_opponent = [[1,0,1], [1,1,1],   [1,3,1], [1,4,1],   [1,6,1], [1,7,1],
-                            [1,0,0], [1,1,0],   [1,3,0], [1,4,0],   [1,6,0], [1,7,0]]
+
+        # Implementing suitable action update
+        if action[0]=="MOVE":
+            current_player, current_opponent = update_move(self, colour, action)
+        else:
+            current_player, current_opponent = update_boom(self, colour, action)
         self.player = current_player
         self.opponent = current_opponent
