@@ -1,3 +1,4 @@
+from utils.update import update_move, update_boom
 
 class ExamplePlayer:
     def __init__(self, colour):
@@ -25,6 +26,10 @@ class ExamplePlayer:
         else:
             self.player = black
             self.opponent = white
+    def __str__(self):
+        return "Player color: %s\n \
+        Player stacks: %s\n \
+        Opponent stacks: %s" % (self.color, self.player, self.opponent)
 
 
     def action(self):
@@ -65,5 +70,6 @@ class ExamplePlayer:
             current_player, current_opponent = update_move(self, colour, action)
         else:
             current_player, current_opponent = update_boom(self, colour, action)
+
         self.player = current_player
         self.opponent = current_opponent
