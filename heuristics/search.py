@@ -1,7 +1,13 @@
 """ This is the collection package of search utilities and heuristic
     functions to apply on agents that use heuristics 
     Goal: Find a space that brings the most opponent cluster"""
-
+class Node:
+    def __init__(self, parent, action):
+        self.parent = parent
+        self.actions = []
+        self.g = 0
+        self.h = 0
+        self.cost = 0
 
 """Node functionality evaluation"""
 
@@ -28,4 +34,7 @@ def greedy(action_list):
             best_action = action
             best_cost = cost
     return best_action
+
+def a_star(action_list):
+    pass
 
