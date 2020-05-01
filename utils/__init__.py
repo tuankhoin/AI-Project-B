@@ -1,1 +1,1 @@
-from utils.update import update_move, update_boom
+from utils.functionality import get_available_action, update_move, update_boom

@@ -1,7 +1,6 @@
 """Run this script to test the newly implemented functions"""
 from boomers.player import ExamplePlayer as Player
-from utils.update import update_move, update_boom
-from utils.functionality import get_available_action
+from utils.functionality import get_available_action, update_move, update_boom
 
 player = Player('white')
 available = get_available_action(player)

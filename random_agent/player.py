@@ -1,4 +1,5 @@
-from utils.update import update_move, update_boom
+import random
+from utils.functionality import get_available_action, update_move, update_boom
 
 class ExamplePlayer:
     def __init__(self, colour):
@@ -42,7 +43,8 @@ class ExamplePlayer:
         represented based on the spec's instructions for representing actions.
         """
         # TODO: Decide what action to take, and return it
-        return ("BOOM", (0, 0))
+        action_list = get_available_action(self)
+        return random.choice(action_list)
 
 
     def update(self, colour, action):
