@@ -6,4 +6,3 @@
 # it into this module with the name 'Player':
 
 from boomers.player import ExamplePlayer as Player
-from utils.update import update_move, update_boom

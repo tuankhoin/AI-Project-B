@@ -1,5 +1,7 @@
 """Include basic updating functions for the player"""
+
 def update_move(player, color, action):
+    """Updating the player status after a move action"""
     current_player = player.player
     current_opponent = player.opponent
 
@@ -10,15 +12,10 @@ def update_move(player, color, action):
         list_update(action, current_opponent)
     return current_player, current_opponent
 
-def update_boom(player, color, action):
-    current_player = [[1,0,7], [1,1,7],   [1,3,7], [1,4,7],   [1,6,7], [1,7,7],
-                      [1,0,6], [1,1,6],   [1,3,6], [1,4,6],   [1,6,6], [1,7,6]]
-    current_opponent = [[1,0,1], [1,1,1],   [1,3,1], [1,4,1],   [1,6,1], [1,7,1],
-                        [1,0,0], [1,1,0],   [1,3,0], [1,4,0],   [1,6,0], [1,7,0]]
-    return current_player, current_opponent
+
 
 def list_update(action, stack_list):
-    ntoken = 1
+    """Updating the status of the side that is on turn"""
     index = -1
 
     # Look for token in moved position
@@ -46,3 +43,47 @@ def list_update(action, stack_list):
         stack_list[index][0] += action[1]
     else:
         stack_list.append([action[1], action[3][0], action[3][1]])
+
+
+def update_boom(player, color, action):
+    """Updating the player status after a boom action"""
+    current_player = player.player
+    current_opponent = player.opponent
+    stacks = []
+    destroyed_player = []
+    destroyed_opponent = []
+    destroyed_token = []
+
+    # Which side ignited the boom?
+    if color == player.color:
+        stacks = current_player
+    else:
+        stacks = current_opponent
+
+    # Chain up the boomed ones, strating from the ignition
+    for token in stacks:
+        if token[1] == action[1][0] and token[2] == action[1][1]:
+            destroyed_token = token
+            break
+    cluster(player, destroyed_token, destroyed_player, destroyed_opponent)
+
+    # Detonating
+    for token in destroyed_player:
+        current_player.remove(token)
+    for token in destroyed_opponent:
+        current_opponent.remove(token)
+
+    return current_player, current_opponent
+
+def cluster(player, destroyed_token, destroyed_player, destroyed_opponent):
+    """Recursively adding adjacent stacks to the cluster lists"""
+    # Recursive chaining to list for player stacks
+    for token in player.player:
+        if token not in destroyed_player and abs(token[1]-destroyed_token[1])<=1 and abs(token[2]-destroyed_token[2])<=1:
+            destroyed_player.append(token)
+            cluster(player, token, destroyed_player, destroyed_opponent)
+    # Recursive chaining to list for opponent stacks
+    for token in player.opponent:
+        if token not in destroyed_opponent and abs(token[1]-destroyed_token[1])<=1 and abs(token[2]-destroyed_token[2])<=1:
+            destroyed_opponent.append(token)
+            cluster(player, token, destroyed_player, destroyed_opponent)
