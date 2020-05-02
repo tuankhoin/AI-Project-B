@@ -29,7 +29,18 @@ class Node:
     
     def expand(self,action):
         """Expand a node to a valid move"""
-        self.children.append(Node(self, action, self.player.color))
+        created = False
+        for child in self.children:
+            if child.action_done == action:
+                created = True
+                break
+        if not created:
+            self.children.append(Node(self, action, self.player.color))
+
+    def expand_all(self):
+        """Expand all of a node's children"""
+        for action in self.actions:
+            self.children.append(Node(self, action, self.player.color))
 
     def propagate_back(self):
         """Return the original node's action that resulted in this node"""
