@@ -100,6 +100,7 @@ def update_boom(player, color, action):
         if token[1] == action[1][0] and token[2] == action[1][1]:
             destroyed_token = token
             break
+    destroyed_player.append(destroyed_token)
     cluster(player, destroyed_token, destroyed_player, destroyed_opponent)
 
     # Detonating
@@ -123,3 +124,31 @@ def cluster(player, destroyed_token, destroyed_player, destroyed_opponent):
             destroyed_opponent.append(token)
             cluster(player, token, destroyed_player, destroyed_opponent)
     
+def get_clusters(player):
+    """Retrieve a list of clusters_array of type [clustered_player, clustered_opponent]
+        cluster_array[0]: Array of player stacks in the cluster
+        cluster_array[1]: Array of opponent stacks in the cluster"""
+    clusters = []
+    is_added = False
+
+    for token in player.player:
+        is_added = False
+        for cluster_element in clusters:
+            if token in cluster_element[0]:
+                is_added = True
+                break
+        if not is_added:
+            l = len(clusters)
+            clusters.append([[token],[]])
+            cluster(player, token, clusters[l][0], clusters[l][1])
+    for token in player.opponent:
+        is_added = False
+        for cluster_element in clusters:
+            if token in cluster_element[1]:
+                is_added = True
+                break
+        if not is_added:
+            l = len(clusters)
+            clusters.append([[],[token]])
+            cluster(player, token, clusters[l][0], clusters[l][1])
+    return clusters
