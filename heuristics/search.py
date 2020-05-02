@@ -17,7 +17,7 @@ class Node:
         self.player = Player(color)
 
         self.parent = parent
-        if parent == None:
+        if parent != None:
             self.player.player, self.player.opponent = update_move(self.parent.player, self.parent.player.color, action)
         self.children = []
 
