@@ -1,5 +1,5 @@
-from utils.update import update_move, update_boom
-from utils.functionality import get_available_action
+from utils.functionality import get_available_action, update_move, update_boom
+import heuristics.search as search
 
 class ExamplePlayer:
     def __init__(self, colour):
@@ -43,7 +43,8 @@ class ExamplePlayer:
         represented based on the spec's instructions for representing actions.
         """
         # TODO: Decide what action to take, and return it
-        return ("BOOM", (0, 0))
+        action_list = get_available_action(self)
+        return search.greedy(action_list)
 
 
     def update(self, colour, action):
