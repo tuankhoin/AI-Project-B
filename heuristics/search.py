@@ -1,13 +1,34 @@
 """ This is the collection package of search utilities and heuristic
     functions to apply on agents that use heuristics 
     Goal: Find a space that brings the most opponent cluster"""
+from utils.functionality import get_available_action, update_move, update_boom
+from boomers.player import ExamplePlayer as Player
+
 class Node:
-    def __init__(self, parent, action):
+    """Each node will contains a player's state and its available moves:
+        parent: its predecessor state
+        children: its following steps
+        actions: its available actions
+        player: its representing game state
+        g(x) + h(x) = cost(x)
+        """
+    def __init__(self, parent, action, color):
+
+        self.player = Player(color)
+
         self.parent = parent
+        if parent == None:
+            self.player.player, self.player.opponent = update_move(self.parent.player, self.parent.player.color, action)
+        self.children = []
+
         self.actions = []
         self.g = 0
         self.h = 0
-        self.cost = 0
+        self.cost = self.g + self.h
+    
+    def expand(self,action):
+        """Expand a node to a valid move"""
+        self.children.append(Node(self, action, self.player.color))
 
 """Node functionality evaluation"""
 
