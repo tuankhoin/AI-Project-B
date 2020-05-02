@@ -16,6 +16,10 @@ f.update_move(player, 'white', move1)
 
 print(player)
 
+available = f.get_available_action(player)
+
+print(*available, sep='\n')
+
 f.update_boom(player, 'white', boom)
 
 print(player)
