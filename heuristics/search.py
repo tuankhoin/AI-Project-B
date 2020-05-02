@@ -17,25 +17,27 @@ class Node:
         self.player = Player(color)
 
         self.parent = parent
+        self.action_done = action
         if parent != None:
-            self.player.player, self.player.opponent = f.update_move(self.parent.player, self.parent.player.color, action)
+            if action[0] == 'MOVE':
+                self.player.player, self.player.opponent = f.update_move(self.parent.player, self.parent.player.color, action)
+            if action[0] == 'BOOM':
+                self.player.player, self.player.opponent = f.update_boom(self.parent.player, self.parent.player.color, action)
         self.children = []
 
-        self.action_done = action
-        self.actions = []
+        self.actions = f.get_available_action(self.player)
         self.g = 0
         self.h = 0
         self.cost = self.g + self.h
     
     def expand(self,action):
-        """Expand a node to a valid move"""
-        created = False
+        """Returns the resulted children from applying action"""
         for child in self.children:
             if child.action_done == action:
-                created = True
-                break
-        if not created:
-            self.children.append(Node(self, action, self.player.color))
+                return child
+        new_child = Node(self, action, self.player.color)
+        self.children.append(new_child)
+        return new_child
 
     def expand_all(self):
         """Expand all of a node's children"""
