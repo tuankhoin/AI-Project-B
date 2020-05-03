@@ -1,6 +1,7 @@
 """ This is the collection package of search utilities and heuristic
     functions to apply on agents that use heuristics 
     Goal: Find a space that brings the most opponent cluster"""
+import math
 from copy import deepcopy
 import utils.functionality as f
 from boomers.player import ExamplePlayer as Player
@@ -53,7 +54,29 @@ class Node:
 """Node functionality evaluation"""
 
 def nearest_opponent(player, token):
-    pass
+    """Return the closest opponent's stack to the argument token"""
+    closest_sum = 999
+    closest_opponent = []
+    for rival in player.opponent:
+        sum = manhattan_upgraded(token, rival)
+        if sum < closest_sum:
+            closest_opponent = rival
+            closest_sum = sum
+    return closest_opponent
+
+def get_distance(token_one, token_two):
+    """Returns x and y distance between 2 token stacks"""
+    return abs(token_one[1]-token_two[1]), abs(token_one[2]-token_two[2])
+
+def euclidian(token_one, token_two):
+    """Returns the euclidean distance between two tokens"""
+    x, y = get_distance(token_one,token_two)
+    return math.sqrt(x**2+y**2)
+
+def manhattan_upgraded(token_one, token_two):
+    """Return the upgraded manhattan distance for getting from token_one to token_two"""
+    x, y = get_distance(token_one,token_two)
+    return math.floor((x+y)/token_one[0])
 
 def get_direct_cost(action):
     return 0
