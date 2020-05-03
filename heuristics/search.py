@@ -56,7 +56,7 @@ class Node:
 def nearest_opponent(player, token):
     """Return the closest opponent's stack to the argument token"""
     closest_sum = 999
-    closest_opponent = []
+    closest_opponent = None
     for rival in player.opponent:
         sum = manhattan_upgraded(token, rival)
         if sum < closest_sum:
@@ -78,22 +78,29 @@ def manhattan_upgraded(token_one, token_two):
     x, y = get_distance(token_one,token_two)
     return math.floor((x+y)/token_one[0])
 
-def get_direct_cost(action):
+def get_direct_cost(player,action):
     return 0
 
-def get_heuristics(action):
+def get_heuristics(player,action):
+    if action[0]=='BOOM':
+        pass
+    else:
+        x_move, y_move = action[3]
+        move_token = f.get_token_position(player, action[2])
+        closest_opponent = nearest_opponent(player, move_token)
+        return euclidian([1, x_move, y_move],closest_opponent)-euclidian(move_token, closest_opponent)
     return 0
 
 """Search algorithms"""
 
-def greedy(action_list):
+def greedy(player,action_list):
     """Using the greedy algorithm, choose the best action
     from the list of available moves"""
     best_action = action_list[0]
     best_cost = 0
 
     for action in action_list:
-        cost = get_direct_cost(action) + get_heuristics(action)
+        cost = get_direct_cost(player,action) + get_heuristics(player,action)
         if cost > best_cost:
             best_action = action
             best_cost = cost

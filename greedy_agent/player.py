@@ -44,7 +44,7 @@ class ExamplePlayer:
         """
         # TODO: Decide what action to take, and return it
         action_list = get_available_action(self)
-        return search.greedy(action_list)
+        return search.greedy(self,action_list)
 
 
     def update(self, colour, action):

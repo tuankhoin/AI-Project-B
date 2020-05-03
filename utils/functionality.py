@@ -153,6 +153,16 @@ def get_clusters(player):
             cluster(player, token, clusters[l][0], clusters[l][1])
     return clusters
 
+def get_token_position(player, loc):
+    """Return the corresponding token to the argument location"""
+    for token in player.player:
+        if token[1]==loc[0] and token[2]==loc[1]:
+            return token
+    for token in player.opponent:
+        if token[1]==loc[0] and token[2]==loc[1]:
+            return token
+    return None
+
 def get_total_tokens(faction):
     """
     Counts the total number of tokens a given color has. Adds up each stack for
