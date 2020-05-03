@@ -123,7 +123,7 @@ def cluster(player, destroyed_token, destroyed_player, destroyed_opponent):
         if token not in destroyed_opponent and abs(token[1]-destroyed_token[1])<=1 and abs(token[2]-destroyed_token[2])<=1:
             destroyed_opponent.append(token)
             cluster(player, token, destroyed_player, destroyed_opponent)
-    
+
 def get_clusters(player):
     """Retrieve a list of clusters_array of type [clustered_player, clustered_opponent]
         cluster_array[0]: Array of player stacks in the cluster
@@ -152,3 +152,20 @@ def get_clusters(player):
             clusters.append([[],[token]])
             cluster(player, token, clusters[l][0], clusters[l][1])
     return clusters
+
+def get_total_tokens(faction):
+    """
+    Counts the total number of tokens a given color has. Adds up each stack for
+    the faction in question.
+
+    @param:
+    faction: a list of (n_tokens, x, y), of the color
+
+    Returns a positive int, total number of tokens
+    """
+    total = 0
+
+    for token in faction:
+        total += token[0]
+
+    return total

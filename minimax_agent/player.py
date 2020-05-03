@@ -1,5 +1,5 @@
 from utils.update import update_move, update_boom
-from utils.functionality import get_available_action
+from utils.functionality import get_available_action, get_total_tokens
 
 class ExamplePlayer:
     def __init__(self, colour):
@@ -74,3 +74,22 @@ class ExamplePlayer:
 
         self.player = current_player
         self.opponent = current_opponent
+
+    def evaluate(self, action):
+        """
+        Evaluates the action in terms of advantageous for the player or Opponent
+
+        Considers number of opponent tokens on the board, number of opponent
+        tokens boomed, number of friendly fires and distance to the
+        nearest opponent
+
+        @params
+        action : an action tuple as defined in specifications
+
+        Returns an int representing the score of the action:
+        positive int: advantageous towards player
+        negative int: advantageous towards opponent
+        """
+
+        opponent_count = get_total_tokens(self.opponent)
+        
