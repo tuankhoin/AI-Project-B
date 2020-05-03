@@ -6,7 +6,7 @@ node = s.Node(None,None,'white')
 
 print(node)
 
-#node.expand_all()
+node.expand_all()
 
 print(len(node.children))
 

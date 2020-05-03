@@ -14,6 +14,7 @@ class ExamplePlayer:
         """
         # TODO: Set up state representation.
         self.color = colour
+        self.turn = 0
         # DEFAULT representation of a board: [ntoken, x, y]
         black = [[1,0,7], [1,1,7],   [1,3,7], [1,4,7],   [1,6,7], [1,7,7],
                  [1,0,6], [1,1,6],   [1,3,6], [1,4,6],   [1,6,6], [1,7,6]]
@@ -42,6 +43,15 @@ class ExamplePlayer:
         represented based on the spec's instructions for representing actions.
         """
         # TODO: Decide what action to take, and return it
+        if self.turn == 0:
+            return ("MOVE", 1, (3,1), (4,1))
+        if self.turn == 1:
+            return ("MOVE", 2, (4,1), (4,3))
+        if self.turn == 2:
+            if [2,4,3] in self.player:
+                return ("MOVE", 1, (4,3), (4,5))
+            else:
+                pass
         return ("BOOM", (0, 0))
 
 
@@ -73,3 +83,4 @@ class ExamplePlayer:
 
         self.player = current_player
         self.opponent = current_opponent
+        self.turn += 1
