@@ -1,6 +1,7 @@
 """ This is the collection package of search utilities and heuristic
     functions to apply on agents that use heuristics 
     Goal: Find a space that brings the most opponent cluster"""
+from copy import deepcopy
 import utils.functionality as f
 from boomers.player import ExamplePlayer as Player
 
@@ -19,16 +20,14 @@ class Node:
         self.parent = parent
         self.action_done = action
         if parent != None:
-            if action[0] == 'MOVE':
-                self.player.player, self.player.opponent = f.update_move(self.parent.player, self.parent.player.color, action)
-            if action[0] == 'BOOM':
-                self.player.player, self.player.opponent = f.update_boom(self.parent.player, self.parent.player.color, action)
+            self.player.player = deepcopy(parent.player.player)
+            self.player.opponent = deepcopy(parent.player.opponent)
+            self.player.update(self.player.color, action)
         self.children = []
 
         self.actions = f.get_available_action(self.player)
         self.g = 0
         self.h = 0
-        self.cost = self.g + self.h
     
     def expand(self,action):
         """Returns the resulted children from applying action"""
