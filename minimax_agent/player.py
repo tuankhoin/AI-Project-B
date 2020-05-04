@@ -99,11 +99,11 @@ class ExamplePlayer:
         curr_action = curr_node.action_done
         opponent_count = func.get_total_tokens(prev_node.player.opponent)
         opponent_dead = opponent_count - func.get_total_tokens(curr_node.player.opponent)
-        allies_dead = func.get_total_tokens(prev_node.player.player) -
+        allies_dead = func.get_total_tokens(prev_node.player.player) - \
                         func.get_total_tokens(curr_node.player.player)
 
         #acting_token stored as a tuple, (x, y)
-        if curr_action is not None and curr_action[0] is "MOVE":
+        if curr_action is not None and curr_action[0] == "MOVE":
             #Works on the game state after a move was applied
             #If at player's 2nd turn, assume previous state has stack of 1
             #Will never have a previous state of boom
@@ -111,20 +111,20 @@ class ExamplePlayer:
                 prev_stack = 1
             else:
                 prev_stack = prev_action[1]
-            prev_token = (prev_stack, prev_action[2], prev_action[3])
-            curr_token = (curr_action[1], curr_action[2], curr_action[3])
+            prev_token = (prev_stack, curr_action[2][0], curr_action[2][1])
+            curr_token = (curr_action[1], curr_action[3][0], curr_action[3][1])
 
-            nearest_enemy = nearest_opponent(prev_token)
+            nearest_enemy = nearest_opponent(self, prev_token)
             #TODO - find previous token's distance to enemy
             prev_dist = euclidean(prev_token, nearest_enemy)
             #TODO - find current token's distance to enemy
             curr_dist = euclidean(curr_token, nearest_enemy)
 
-            score = (opponent_dead * config.ENEMY_KILL_WEIGHT)
-                    + (allies_dead * config.TEAM_KILL_WEIGHT)
+            score = (opponent_dead * config.ENEMY_KILL_WEIGHT) \
+                    + (allies_dead * config.TEAM_KILL_WEIGHT) \
                     + ((prev_dist - curr_dist) * config.DISTANCE_WEIGHT)
         else:
-            acting_token = action[1]
+            acting_token = curr_action[1]
+            score = 0
 
-
-        pass
+        return score
