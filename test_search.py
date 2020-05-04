@@ -3,6 +3,7 @@ import heuristics.search as s
 from boomers.player import ExamplePlayer as Player
 
 node = s.Node(None,None,'white')
+node.evaluate_actions()
 
 print(node)
 

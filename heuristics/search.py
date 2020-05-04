@@ -21,14 +21,19 @@ class Node:
         self.parent = parent
         self.action_done = action
         if parent != None:
+            self.player.color = self.parent.player.color
             self.player.player = deepcopy(parent.player.player)
             self.player.opponent = deepcopy(parent.player.opponent)
             self.player.update(self.player.color, action)
         self.children = []
 
-        self.actions = f.get_available_action(self.player)
+        self.actions = None
         self.g = 0
         self.h = 0
+
+    def evaluate_actions(self):
+        """Only retrieve the necessary actions when needed, to save space"""
+        self.actions = f.get_available_action(self.player)
     
     def expand(self,action):
         """Returns the resulted children from applying action"""
@@ -51,6 +56,13 @@ class Node:
             root = root.parent
         return root.action_done
 
+    def update_node_state(self, player_list, opponent_list):
+        """By default the initial node created will represent the default board state.
+        This function is used to update the true state to the node
+        WARNING: Only use this on the initial node created"""
+        self.player.player = player_list
+        self.player.opponent = opponent_list
+
 """Node functionality evaluation"""
 
 def nearest_opponent(player, token):
@@ -58,7 +70,7 @@ def nearest_opponent(player, token):
     closest_sum = 999
     closest_opponent = None
     for rival in player.opponent:
-        sum = manhattan_upgraded(token, rival)
+        sum = euclidean(token, rival)
         if sum < closest_sum:
             closest_opponent = rival
             closest_sum = sum
@@ -68,7 +80,7 @@ def get_distance(token_one, token_two):
     """Returns x and y distance between 2 token stacks"""
     return abs(token_one[1]-token_two[1]), abs(token_one[2]-token_two[2])
 
-def euclidian(token_one, token_two):
+def euclidean(token_one, token_two):
     """Returns the euclidean distance between two tokens"""
     x, y = get_distance(token_one,token_two)
     return math.sqrt(x**2+y**2)
@@ -88,7 +100,7 @@ def get_heuristics(player,action):
         x_move, y_move = action[3]
         move_token = f.get_token_position(player, action[2])
         closest_opponent = nearest_opponent(player, move_token)
-        return euclidian([1, x_move, y_move],closest_opponent)-euclidian(move_token, closest_opponent)
+        return euclidean([1, x_move, y_move],closest_opponent)-euclidean(move_token, closest_opponent)
     return 0
 
 """Search algorithms"""
