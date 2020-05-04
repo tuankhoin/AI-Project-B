@@ -3,6 +3,10 @@ import heuristics.search as s
 from boomers.player import ExamplePlayer as Player
 
 node = s.Node(None,None,'white')
+node.update_node_state([[2, 0, 1], [1, 1, 1], [1, 3, 1], [1, 4, 1],
+                        [1, 6, 1], [1, 7, 1], [1, 0, 0], [1, 1, 0],
+                        [1, 3, 0], [1, 4, 0], [1, 6, 0], [1, 7, 0]], 
+                        node.player.opponent)
 node.evaluate_actions()
 
 print(node)
