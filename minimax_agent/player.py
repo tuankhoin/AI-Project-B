@@ -124,7 +124,7 @@ class ExamplePlayer:
                     + (allies_dead * config.TEAM_KILL_WEIGHT) \
                     + ((prev_dist - curr_dist) * config.DISTANCE_WEIGHT)
         else:
-            acting_token = curr_action[1]
-            score = 0
+            score = (opponent_dead * config.ENEMY_KILL_WEIGHT) \
+                    + (allies_dead * config.TEAM_KILL_WEIGHT)
 
         return score
