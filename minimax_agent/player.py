@@ -102,7 +102,7 @@ class ExamplePlayer:
         allies_dead = func.get_total_tokens(prev_node.player.player) - \
                         func.get_total_tokens(curr_node.player.player)
 
-        #acting_token stored as a tuple, (x, y)
+        #Ensures not evaluating on the root state against itself
         if curr_action is not None and curr_action[0] == "MOVE":
             #Works on the game state after a move was applied
             #If at player's 2nd turn, assume previous state has stack of 1
@@ -111,20 +111,21 @@ class ExamplePlayer:
                 prev_stack = 1
             else:
                 prev_stack = prev_action[1]
-            prev_token = (prev_stack, curr_action[2][0], curr_action[2][1])
-            curr_token = (curr_action[1], curr_action[3][0], curr_action[3][1])
+            prev_token = [prev_stack, curr_action[2][0], curr_action[2][1]]
+            curr_token = [curr_action[1], curr_action[3][0], curr_action[3][1]]
 
             nearest_enemy = nearest_opponent(self, prev_token)
-            #TODO - find previous token's distance to enemy
+            #TODO - find previous token's distance to an optimal location
             prev_dist = euclidean(prev_token, nearest_enemy)
-            #TODO - find current token's distance to enemy
+            #TODO - find current token's distance to optimal location
             curr_dist = euclidean(curr_token, nearest_enemy)
 
-            score = (opponent_dead * config.ENEMY_KILL_WEIGHT) \
-                    + (allies_dead * config.TEAM_KILL_WEIGHT) \
-                    + ((prev_dist - curr_dist) * config.DISTANCE_WEIGHT)
-        else:
+            score = ((prev_dist - curr_dist) * config.DISTANCE_WEIGHT)
+        elif curr_action is not None and curr_action[0] == "BOOM":
+            #For evaluating BOOM
             score = (opponent_dead * config.ENEMY_KILL_WEIGHT) \
                     + (allies_dead * config.TEAM_KILL_WEIGHT)
-
+        else:
+            print("ERROR NODE STATE!\n")
+            exit()
         return score
