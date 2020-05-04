@@ -1,4 +1,6 @@
 import utils.functionality as func
+import minimax_agent.config as config
+from heuristics.search import nearest_opponent, euclidean
 
 class ExamplePlayer:
     def __init__(self, colour):
@@ -74,22 +76,55 @@ class ExamplePlayer:
         self.player = current_player
         self.opponent = current_opponent
 
-    def evaluate(self, action):
+    def evaluate(self, prev_node, curr_node):
         """
-        Evaluates the action in terms of advantageous for the player or Opponent
+        Evaluates the action in terms of advantageous for the player or
+        Opponent
 
-        Considers number of opponent tokens on the board, number of opponent
-        tokens boomed, number of friendly fires and distance to the
-        nearest opponent
+        Considers sum of:
+        number of opponent tokens boomed (n * enemy_weight),
+        number of friendly fires (n * team_weight) and
+        distance to the nearest opponent: range(-10,10,1) (negative if action moves
+        further away)
 
         @params
-        action : an action tuple as defined in specifications
+        prev_node: a Node object, representing game state before action
+        curr_node: a Node object, representing game state after action applied
 
         Returns an int representing the score of the action:
         positive int: advantageous towards player
         negative int: advantageous towards opponent
         """
+        prev_action = prev_node.action_done
+        curr_action = curr_node.action_done
+        opponent_count = func.get_total_tokens(prev_node.player.opponent)
+        opponent_dead = opponent_count - func.get_total_tokens(curr_node.player.opponent)
+        allies_dead = func.get_total_tokens(prev_node.player.player) -
+                        func.get_total_tokens(curr_node.player.player)
 
-        opponent_count = func.get_total_tokens(self.opponent)
+        #acting_token stored as a tuple, (x, y)
+        if curr_action is not None and curr_action[0] is "MOVE":
+            #Works on the game state after a move was applied
+            #If at player's 2nd turn, assume previous state has stack of 1
+            #Will never have a previous state of boom
+            if prev_action is None:
+                prev_stack = 1
+            else:
+                prev_stack = prev_action[1]
+            prev_token = (prev_stack, prev_action[2], prev_action[3])
+            curr_token = (curr_action[1], curr_action[2], curr_action[3])
+
+            nearest_enemy = nearest_opponent(prev_token)
+            #TODO - find previous token's distance to enemy
+            prev_dist = euclidean(prev_token, nearest_enemy)
+            #TODO - find current token's distance to enemy
+            curr_dist = euclidean(curr_token, nearest_enemy)
+
+            score = (opponent_dead * config.ENEMY_KILL_WEIGHT)
+                    + (allies_dead * config.TEAM_KILL_WEIGHT)
+                    + ((prev_dist - curr_dist) * config.DISTANCE_WEIGHT)
+        else:
+            acting_token = action[1]
+
+
         pass
-        
