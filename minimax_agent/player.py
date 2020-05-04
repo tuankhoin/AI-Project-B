@@ -1,5 +1,4 @@
-from utils.update import update_move, update_boom
-from utils.functionality import get_available_action, get_total_tokens
+import utils.functionality as func
 
 class ExamplePlayer:
     def __init__(self, colour):
@@ -68,9 +67,9 @@ class ExamplePlayer:
 
         # Implementing suitable action update
         if action[0]=="MOVE":
-            current_player, current_opponent = update_move(self, colour, action)
+            current_player, current_opponent = func.update_move(self, colour, action)
         else:
-            current_player, current_opponent = update_boom(self, colour, action)
+            current_player, current_opponent = func.update_boom(self, colour, action)
 
         self.player = current_player
         self.opponent = current_opponent
@@ -91,5 +90,6 @@ class ExamplePlayer:
         negative int: advantageous towards opponent
         """
 
-        opponent_count = get_total_tokens(self.opponent)
+        opponent_count = func.get_total_tokens(self.opponent)
+        pass
         

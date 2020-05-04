@@ -30,6 +30,10 @@ class Node:
         self.actions = None
         self.g = 0
         self.h = 0
+    def __str__(self):
+        return "Resulted from: %s\n \
+        Player stacks: %s\n \
+        Opponent stacks: %s" % (self.action_done, self.player.player, self.player.opponent)
 
     def evaluate_actions(self):
         """Only retrieve the necessary actions when needed, to save space"""
@@ -44,10 +48,28 @@ class Node:
         self.children.append(new_child)
         return new_child
 
+    def expand_minimax(self, action):
+        """Returns the resulted children from applying action. 
+            For use in minimax to switch turns"""
+        for child in self.children:
+            if child.action_done == action:
+                return child
+        new_child = Node(self, action, self.player.color)
+        swap_turn(new_child)
+        self.children.append(new_child)
+        return new_child
+
     def expand_all(self):
         """Expand all of a node's children"""
         for action in self.actions:
             self.children.append(Node(self, action, self.player.color))
+
+    def expand_all_minimax(self):
+        """Expand all of a node's children"""
+        for action in self.actions:
+            child = Node(self, action, self.player.color)
+            swap_turn(child)
+            self.children.append(child)    
 
     def propagate_back(self):
         """Return the original node's action that resulted in this node"""
@@ -64,6 +86,11 @@ class Node:
         self.player.opponent = opponent_list
 
 """Node functionality evaluation"""
+def create_init_node(player):
+    """Initialize a node for searching from the player's state"""
+    node = Node(None,None,player.color)
+    node.update_node_state(player.player, player.opponent)
+    return node
 
 def nearest_opponent(player, token):
     """Return the closest opponent's stack to the argument token"""
@@ -118,6 +145,17 @@ def greedy(player,action_list):
             best_cost = cost
     return best_action
 
-def a_star(action_list):
+def minimax(player):
+    node = create_init_node(player)
+    node.evaluate_actions()
     pass
 
+def swap_turn(node):
+    """Swap positions when needed to evaluate points from opponent's perspective,
+        or reswap when need to return to the player's turn"""
+    pointer = node.player.player
+    node.player.player = node.player.opponent
+    node.player.opponent = pointer
+
+def evaluate(player, action):
+    pass

@@ -1,10 +1,6 @@
 def get_available_action(player):
     """Returns a list that contains the available moves of a player"""
     action_list = []
-    stack_list = player.player + player.opponent
-    # Making a list of occupied coordinates
-    for stack in stack_list:
-        stack = (stack[1],stack[2])
 
     # For each token on board:
     for token in player.player:
@@ -12,9 +8,11 @@ def get_available_action(player):
 
         # Check for all available horizontal moves
         for i in range(token[1]-token[0], token[1]+token[0]+1):
+            # Out bound checking
             if i == token[1] or i<0 or i>7:
                 continue
-            if (i,token[2]) not in stack_list:
+            # Check if space is occupied by rival's stack
+            if not token_in_list(player,(i,token[2]),player.opponent):
                 # All available moves in range
                 for j in range(1, token[0]+1):
                     action_list.append(('MOVE', j, (token[1],token[2]), (i,token[2])))
@@ -23,13 +21,47 @@ def get_available_action(player):
         for i in range(token[2]-token[0], token[2]+token[0]+1):
             if i == token[2] or i<0 or i>7:
                 continue
-            if (i,token[1]) not in stack_list:
+            if not token_in_list(player,(token[1],i),player.opponent):
                 for j in range(1, token[0]+1):
                     action_list.append(('MOVE', j, (token[1],token[2]), (token[1],i)))
 
     return action_list
 
+def get_opponent_action(player):
+    """Returns a list that contains the available moves of a player's opponent"""
+    action_list = []
 
+    # For each token on board:
+    for token in player.opponent:
+        action_list.append(('BOOM', (token[1],token[2])))
+
+        # Check for all available horizontal moves
+        for i in range(token[1]-token[0], token[1]+token[0]+1):
+            # Out bound checking
+            if i == token[1] or i<0 or i>7:
+                continue
+            # Check if space is occupied by rival's stack
+            if not token_in_list(player,(i,token[2]),player.player):
+                # All available moves in range
+                for j in range(1, token[0]+1):
+                    action_list.append(('MOVE', j, (token[1],token[2]), (i,token[2])))
+
+        # Check for all available vertical moves
+        for i in range(token[2]-token[0], token[2]+token[0]+1):
+            if i == token[2] or i<0 or i>7:
+                continue
+            if not token_in_list(player,(token[1],i),player.player):
+                for j in range(1, token[0]+1):
+                    action_list.append(('MOVE', j, (token[1],token[2]), (token[1],i)))
+
+    return action_list
+
+def token_in_list(player, loc, s_list):
+    """Returns True if location contains a token in the s_list"""
+    for token in s_list:
+        if token[1]==loc[0] and token[2]==loc[1]:
+            return True
+    return False
 
 
 """ BASIC MOVEMENT UPDATE FUNCTIONS
