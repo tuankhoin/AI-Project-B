@@ -132,7 +132,11 @@ def update_boom(player, color, action):
         if token[1] == action[1][0] and token[2] == action[1][1]:
             destroyed_token = token
             break
-    destroyed_player.append(destroyed_token)
+
+    if color == player.color:
+        destroyed_player.append(destroyed_token)
+    else:
+        destroyed_opponent.append(destroyed_token)
     cluster(player, destroyed_token, destroyed_player, destroyed_opponent)
 
     # Detonating

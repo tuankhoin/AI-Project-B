@@ -118,17 +118,29 @@ def manhattan_upgraded(token_one, token_two):
     return math.floor((x+y)/token_one[0])
 
 def get_direct_cost(player,action):
-    return 0
+    """Greedy cost: player_loss_tokens - opponent_loss_tokens"""
+    if action[0] == 'BOOM':
+        player_copy = deepcopy(player)
+        boom_player, boom_opponent = f.update_boom(player_copy, player.color, action)
+        #boom_player, boom_opponent = f.update_boom(player, player.color, action)
+        total_token_player, total_token_opponent = f.get_total_tokens(boom_player), f.get_total_tokens(boom_opponent)
+        #print(total_token_player,total_token_opponent)
+        total_past_player, total_past_opponent = f.get_total_tokens(player.player), f.get_total_tokens(player.opponent)
+        #print(total_past_player,total_past_opponent)
+        delta_player = total_token_player - total_past_player
+        delta_opponent = total_token_opponent - total_past_opponent
+        return delta_opponent - delta_player
+    else:
+        return 0
 
 def get_heuristics(player,action):
+    """Greedy heuristics: The closest euclidean distance to an opponent token"""
     if action[0]=='BOOM':
-        pass
+        return 0
     else:
-        x_move, y_move = action[3]
         move_token = f.get_token_position(player, action[2])
         closest_opponent = nearest_opponent(player, move_token)
-        return euclidean([1, x_move, y_move],closest_opponent)-euclidean(move_token, closest_opponent)
-    return 0
+        return manhattan_upgraded(move_token, closest_opponent)
 
 """Search algorithms"""
 
@@ -136,11 +148,13 @@ def greedy(player,action_list):
     """Using the greedy algorithm, choose the best action
     from the list of available moves"""
     best_action = action_list[0]
-    best_cost = 0
+    best_cost = 999
 
     for action in action_list:
-        cost = get_direct_cost(player,action) + get_heuristics(player,action)
-        if cost > best_cost:
+        #print(get_direct_cost(player, action),get_heuristics(player,action))
+        cost = 1.5*get_direct_cost(player, action) + get_heuristics(player,action)
+        #print(cost, best_cost)
+        if cost < best_cost:
             best_action = action
             best_cost = cost
     return best_action

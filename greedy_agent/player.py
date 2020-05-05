@@ -1,5 +1,6 @@
 from utils.functionality import get_available_action, update_move, update_boom
 import heuristics.search as search
+from copy import deepcopy
 
 class ExamplePlayer:
     def __init__(self, colour):
@@ -15,6 +16,8 @@ class ExamplePlayer:
         """
         # TODO: Set up state representation.
         self.color = colour
+        self.player_prev = None
+        self.opponent_prev = None
         # DEFAULT representation of a board: [ntoken, x, y]
         black = [[1,0,7], [1,1,7],   [1,3,7], [1,4,7],   [1,6,7], [1,7,7],
                  [1,0,6], [1,1,6],   [1,3,6], [1,4,6],   [1,6,6], [1,7,6]]
@@ -66,7 +69,9 @@ class ExamplePlayer:
         against the game rules).
         """
         # TODO: Update state representation in response to action.
-
+        self.player_prev = deepcopy(self.player)
+        self.opponent_prev = deepcopy(self.opponent)
+                
         # Implementing suitable action update
         if action[0]=="MOVE":
             current_player, current_opponent = update_move(self, colour, action)

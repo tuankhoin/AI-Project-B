@@ -13,6 +13,7 @@ boom = ('BOOM', (0,0))
 move1=("MOVE", 1, (3,1), (4,1))
 move2=("MOVE", 2, (4,1), (4,3))
 move3=("MOVE", 1, (4,3), (4,5))
+boom4 = ('BOOM', (4,5))
 
 f.update_move(player, 'white', move1)
 f.update_move(player, 'white', move2)
@@ -24,9 +25,9 @@ available = f.get_available_action(player)
 opponent = f.get_opponent_action(player)
 
 print(*available, sep='\n')
-print(*opponent,  sep='\n')
+#print(*opponent,  sep='\n')
 
-f.update_boom(player, 'white', boom)
+f.update_boom(player, 'white', boom4)
 
 print(player)
 
