@@ -134,7 +134,7 @@ def get_direct_cost(player,action):
         return 0
 
 def get_heuristics(player,action):
-    """Greedy heuristics: The closest euclidean distance to an opponent token"""
+    """Greedy heuristics: The smallest step size to boom an opponent token"""
     if action[0]=='BOOM':
         return 0
     else:
