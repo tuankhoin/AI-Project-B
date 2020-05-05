@@ -16,6 +16,7 @@ class ExamplePlayer:
         """
         # TODO: Set up state representation.
         self.color = colour
+        self.turn = 1
         self.player_prev = None
         self.opponent_prev = None
         # DEFAULT representation of a board: [ntoken, x, y]
@@ -46,8 +47,17 @@ class ExamplePlayer:
         represented based on the spec's instructions for representing actions.
         """
         # TODO: Decide what action to take, and return it
-        action_list = get_available_action(self)
-        return search.greedy(self,action_list)
+        if self.turn == 1 and self.color == 'white':
+            return ("MOVE", 1, (3,1), (4,1))
+        elif self.turn == 2 and self.color == 'black':
+            return ("MOVE", 1, (4,6), (3,6))
+        elif self.turn == 3 and self.color == 'white':
+            return ("MOVE", 2, (4,1), (4,3))
+        elif self.turn == 4 and self.color == 'black':
+            return ("MOVE", 2, (3,6), (3,4))
+        else:           
+            action_list = get_available_action(self)
+            return search.greedy(self,action_list)
 
 
     def update(self, colour, action):
@@ -71,12 +81,13 @@ class ExamplePlayer:
         # TODO: Update state representation in response to action.
         self.player_prev = deepcopy(self.player)
         self.opponent_prev = deepcopy(self.opponent)
-                
+
         # Implementing suitable action update
         if action[0]=="MOVE":
             current_player, current_opponent = update_move(self, colour, action)
         else:
             current_player, current_opponent = update_boom(self, colour, action)
 
+        self.turn += 1
         self.player = current_player
         self.opponent = current_opponent
