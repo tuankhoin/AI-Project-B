@@ -30,6 +30,7 @@ class Node:
         self.actions = None
         self.g = 0
         self.h = 0
+        self.eval = self.evaluate()
     def __str__(self):
         return "Resulted from: %s\n \
         Player stacks: %s\n \
@@ -38,7 +39,11 @@ class Node:
     def evaluate_actions(self):
         """Only retrieve the necessary actions when needed, to save space"""
         self.actions = f.get_available_action(self.player)
-    
+
+    def evaluate(self):
+        """Node's evaluation function"""
+        return 0
+
     def expand(self,action):
         """Returns the resulted children from applying action"""
         for child in self.children:
@@ -171,5 +176,4 @@ def swap_turn(node):
     node.player.player = node.player.opponent
     node.player.opponent = pointer
 
-def evaluate(player, action):
-    pass
+
