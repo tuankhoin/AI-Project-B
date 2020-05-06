@@ -1,3 +1,12 @@
+def get_opponent_color(player):
+    """Return a player's opponent color"""
+    if player.color == 'white':
+        return 'black'
+    elif player.color == 'black':
+        return 'white'
+    else:
+        return None
+
 def get_available_action(player):
     """Returns a list that contains the available moves of a player"""
     action_list = []

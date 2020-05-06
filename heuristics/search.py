@@ -78,7 +78,16 @@ class Node:
         for action in self.actions:
             child = Node(self, action, self.player.color)
             swap_turn(child)
-            self.children.append(child)    
+            self.children.append(child)
+
+    def expand_null_move(self):
+        """Expand the node for case of null move"""    
+        opponent_actions = f.get_opponent_action(self.player)
+        for action in opponent_actions:
+            child = Node(self, action, self.player.color)
+            swap_turn(child)
+            self.children.append(child)
+        pass
 
     def propagate_back(self):
         """Return the original node's action that resulted in this node"""
