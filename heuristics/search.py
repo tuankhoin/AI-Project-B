@@ -8,11 +8,13 @@ from boomers.player import ExamplePlayer as Player
 
 class Node:
     """Each node will contains a player's state and its available moves:
-        parent: its predecessor state
+        depth: node depth. Initial node is 0 in depth
+        action_done: resulted action that create the node, null if first
+        parent: its predecessor state, null if first
         children: its following steps
         actions: its available actions
         player: its representing game state
-        g(x) + h(x) = cost(x)
+        eval: evalutation function result of node
         """
     def __init__(self, parent, action, color):
 
@@ -21,15 +23,17 @@ class Node:
         self.parent = parent
         self.action_done = action
         if parent != None:
+            self.depth = self.parent.depth + 1
             self.player.color = self.parent.player.color
             self.player.player = deepcopy(parent.player.player)
             self.player.opponent = deepcopy(parent.player.opponent)
             self.player.update(self.player.color, action)
+        else:
+            self.depth = 0
+
         self.children = []
 
         self.actions = None
-        self.g = 0
-        self.h = 0
         self.eval = self.evaluate()
     def __str__(self):
         return "Resulted from: %s\n \
