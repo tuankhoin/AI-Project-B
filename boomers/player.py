@@ -46,16 +46,16 @@ class ExamplePlayer:
         represented based on the spec's instructions for representing actions.
         """
         # TODO: Decide what action to take, and return it
-        if self.turn == 0:
+        if self.turn == 1 and self.color == 'white':
             return ("MOVE", 1, (3,1), (4,1))
-        if self.turn == 1:
+        elif self.turn == 2 and self.color == 'black':
+            return ("MOVE", 1, (4,6), (3,6))
+        elif self.turn == 3 and self.color == 'white':
             return ("MOVE", 2, (4,1), (4,3))
-        if self.turn == 2:
-            if [2,4,3] in self.player:
-                return ("MOVE", 1, (4,3), (4,5))
-            else:
-                pass
-        return ("BOOM", (0, 0))
+        elif self.turn == 4 and self.color == 'black':
+            return ("MOVE", 2, (3,6), (3,4))
+        else:
+            return ("BOOM", (0, 0))
 
 
     def update(self, colour, action):
