@@ -1,6 +1,6 @@
 import utils.functionality as func
 import minimax_agent.config as config
-from heuristics.search import nearest_opponent, euclidean
+from heuristics.search import nearest_opponent, euclidean, Node
 
 class ExamplePlayer:
     def __init__(self, colour):
@@ -28,6 +28,9 @@ class ExamplePlayer:
         else:
             self.player = black
             self.opponent = white
+
+        self.tree = None
+
     def __str__(self):
         return "Player color: %s\n \
         Player stacks: %s\n \
@@ -44,7 +47,15 @@ class ExamplePlayer:
         represented based on the spec's instructions for representing actions.
         """
         # TODO: Decide what action to take, and return it
-        return ("BOOM", (0, 0))
+        # Init minimax tree
+        self.init_minimax()
+
+        #Expand the minimax tree
+        self.expand_minimax_tree(self.tree)
+
+        #Find the best move based from minimax leaf nodes
+        action = self.get_best_moves()
+        return
 
 
     def update(self, colour, action):
@@ -76,56 +87,76 @@ class ExamplePlayer:
         self.player = current_player
         self.opponent = current_opponent
 
-    def evaluate(self, prev_node, curr_node):
+    def init_minimax(self):
         """
-        Evaluates the action in terms of advantageous for the player or
+        Creates a minimax tree stump as Node object
+        """
+        self.tree = Node(None, None, self.color)
+
+    def expand_minimax_tree(self, node, cutoff=2):
+        """
+        Expands the minimax tree recursively until a certain depth, alternating between
+        player and opponent actions
+
+        Iterates over the player's tree object
+        Minimax tree must be a stump and not None
+
+        @params:
+        cutoff: default=2, a positive int representing depth of tree to stop
+                expansion
+        """
+        #Guard condition
+        if cutoff <= 0:
+            #Evaluate each leaf node at the lowest depth
+            node.eval = self.evaluate(node)
+            print(node, "\nEval: ", node.eval)
+            return
+
+        #Expand the parent node first
+        node.evaluate_actions()
+        node.expand_all_minimax()
+
+        #Expand each child for each node until cutoff reached
+        for child in node.children.values():
+            self.expand_minimax_tree(child, cutoff-1)
+
+    def evaluate(self, curr_node):
+        """
+        Evaluates the leaf node's game state as advantageous for the player or
         Opponent
 
-        Considers sum of:
-        number of opponent tokens boomed (n * enemy_weight),
-        number of friendly fires (n * team_weight) and
-        distance to the nearest opponent: range(-10,10,1) (negative if action moves
-        further away)
+        ASSUMES MORE THAN 2-PLY SEARCH
+
+        Considers symmetric score of:
+        number of player tokens at the root node
+        number of opponent tokens at root node
+        number of player tokens at the leaf node
+        number of opponent tokens at leaf node
 
         @params
-        prev_node: a Node object, representing game state before action
-        curr_node: a Node object, representing game state after action applied
+        curr_node: a Node object, a leaf node of a minimax tree
 
         Returns an int representing the score of the action:
         positive int: advantageous towards player
         negative int: advantageous towards opponent
         """
-        prev_action = prev_node.action_done
-        curr_action = curr_node.action_done
-        opponent_count = func.get_total_tokens(prev_node.player.opponent)
-        opponent_dead = opponent_count - func.get_total_tokens(curr_node.player.opponent)
-        allies_dead = func.get_total_tokens(prev_node.player.player) - \
-                        func.get_total_tokens(curr_node.player.player)
+        #Record the token counts for both colors at the root node
+        start_opponent = func.get_total_tokens(self.tree.player.opponent)
+        start_allies = func.get_total_tokens(self.tree.player.player)
+        #Record token counts for both colors at leaf node
+        opponent_count = func.get_total_tokens(curr_node.player.opponent)
+        allies_count = func.get_total_tokens(curr_node.player.player)
 
-        #Ensures not evaluating on the root state against itself
-        if curr_action is not None and curr_action[0] == "MOVE":
-            #Works on the game state after a move was applied
-            #If at player's 2nd turn, assume previous state has stack of 1
-            #Will never have a previous state of boom
-            if prev_action is None:
-                prev_stack = 1
-            else:
-                prev_stack = prev_action[1]
-            prev_token = [prev_stack, curr_action[2][0], curr_action[2][1]]
-            curr_token = [curr_action[1], curr_action[3][0], curr_action[3][1]]
+        #Calculate the symmetric evaluation score
+        score = (start_allies - start_opponent) \
+                - (opponent_count - allies_count)
 
-            nearest_enemy = nearest_opponent(self, prev_token)
-            #TODO - find previous token's distance to an optimal location
-            prev_dist = euclidean(prev_token, nearest_enemy)
-            #TODO - find current token's distance to optimal location
-            curr_dist = euclidean(curr_token, nearest_enemy)
-
-            score = ((prev_dist - curr_dist) * config.DISTANCE_WEIGHT)
-        elif curr_action is not None and curr_action[0] == "BOOM":
-            #For evaluating BOOM
-            score = (opponent_dead * config.ENEMY_KILL_WEIGHT) \
-                    + (allies_dead * config.TEAM_KILL_WEIGHT)
-        else:
-            print("ERROR NODE STATE!\n")
-            exit()
         return score
+
+    def get_best_moves(self):
+        """
+        Finds the best move from an expanded minimax tree.
+        """
+        
+
+        pass
