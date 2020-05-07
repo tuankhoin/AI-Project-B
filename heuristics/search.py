@@ -32,9 +32,7 @@ class Node:
             self.depth = 0
 
         self.children = dict()
-
         self.actions = None
-        self.eval = None
     def __str__(self):
         return "\tResulted from: %s\n\
         Depth: %d \t Player color: %s\n\
@@ -47,7 +45,7 @@ class Node:
 
     def evaluate(self):
         """Node's evaluation function"""
-        self.eval = 0
+        return 0
 
     def expand(self,action):
         """Returns the resulted children from applying action"""
@@ -105,6 +103,48 @@ class Node:
         # WARNING: Only use this on the initial node created"""
         self.player.player = player_list
         self.player.opponent = opponent_list
+
+    def arrange_actions(self, first_to_expand):
+        """From a given list of nodes that should be expanded first, rearrange them to the first of the list"""
+        for action in first_to_expand:
+            self.actions.remove(action)
+            self.actions.insert(0, action)
+
+    def null_move_search(self):
+        """Do a shallow minimax search on the depth of 2, return a list of nodes that produces cutoffs"""
+        cutoffs = dict()
+        beta = -math.inf
+        self.expand_null_move()
+        curr_action = None
+
+        # Expanding each child
+        for ch in self.children.values():
+            ch.evaluate_actions()
+            ch.expand_all_minimax()
+            min_value = math.inf
+            is_cutoff = False
+
+            # Evaluate for each granchildren
+            for granchild in ch.children.values():
+                val = granchild.evaluate()
+                # Update the minimum value for child
+                if val < min_value:
+                    min_value = val
+                    # If min_value is less than beta, leave the rest. The previous child node has produced a cutoff
+                    if min_value < beta:
+                        is_cutoff = True
+                        break
+            
+            # If current child got cut off, the previous child produced it
+            if is_cutoff:
+                if ch.action_done not in cutoffs:
+                    cutoffs[ch.action_done] = True
+            else:
+                # Update what the previous child is
+                curr_action = ch.action_done
+        
+        return cutoffs
+
 
 """Node functionality evaluation"""
 def create_init_node(player):
