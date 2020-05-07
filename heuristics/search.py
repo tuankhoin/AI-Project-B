@@ -7,14 +7,14 @@ import utils.functionality as f
 from boomers.player import ExamplePlayer as Player
 
 class Node:
-    """Each node will contains a player's state and its available moves:
-        depth: node depth. Initial node is 0 in depth
-        action_done: resulted action that create the node, null if first
-        parent: its predecessor state, null if first
-        children: its following steps
-        actions: its available actions
-        player: its representing game state
-        eval: evalutation function result of node
+    """Each node will contains a player's state and its available moves: \n
+        depth: node depth. Initial node is 0 in depth \n
+        action_done: resulted action that create the node, null if first \n
+        parent: its predecessor state, null if first \n
+        children: its list of following steps \n
+        actions: its available actions \n
+        player: its representing game state \n
+        eval: evalutation function result of node \n
         """
     def __init__(self, parent, action, color):
 
@@ -34,7 +34,7 @@ class Node:
         self.children = dict()
 
         self.actions = None
-        self.eval = self.evaluate()
+        self.eval = None
     def __str__(self):
         return "Resulted from: %s\n \
         Depth: %d \t Player color: %s\n\
@@ -47,7 +47,7 @@ class Node:
 
     def evaluate(self):
         """Node's evaluation function"""
-        return 0
+        self.eval = 0
 
     def expand(self,action):
         """Returns the resulted children from applying action"""
