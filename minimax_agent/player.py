@@ -47,15 +47,14 @@ class ExamplePlayer:
         represented based on the spec's instructions for representing actions.
         """
         # TODO: Decide what action to take, and return it
-        # Init minimax tree
-        self.init_minimax()
 
         #Expand the minimax tree
-        self.expand_minimax_tree(self.tree)
+        self.expand_minimax_tree(self.tree, cutoff=2)
 
         #Find the best move based from minimax leaf nodes
-        action = self.get_best_moves()
-        return
+        action = self.minimax_alpha_beta()
+
+        return action
 
 
     def update(self, colour, action):
@@ -102,14 +101,13 @@ class ExamplePlayer:
         Minimax tree must be a stump and not None
 
         @params:
-        cutoff: default=2, a positive int representing depth of tree to stop
+        cutoff: default=1, a positive int representing depth of tree to stop
                 expansion
         """
         #Guard condition
         if cutoff <= 0:
-            #Evaluate each leaf node at the lowest depth
+            #Evaluate each node at the cutoff depth
             node.eval = self.evaluate(node)
-            print(node, "\nEval: ", node.eval)
             return
 
         #Expand the parent node first
@@ -153,10 +151,90 @@ class ExamplePlayer:
 
         return score
 
-    def get_best_moves(self):
+    def minimax_alpha_beta(self):
         """
-        Finds the best move from an expanded minimax tree.
-        """
-        
+        Finds the best action, using Alpha-Beta pruning, from an expanded
+        minimax tree.
 
-        pass
+        ASSUMPTION:
+        - minimax tree has been fully expanded to its leaf nodes
+
+        Returns an action tuple of the best move
+        """
+        #Initialize [-infinity, infinity]
+        alpha = float('-inf')
+        beta = float('inf')
+        best_action = None
+
+        #Start alpha-beta search and expansion
+        for child in self.tree.children.values():
+            best_score = self.minimax_min(child, alpha, beta)
+
+            print("\nNode: ", child, " has score: ", best_score)
+            #If the value found after going down a branch is better, use the
+            #value as the new alpha
+            if best_score > alpha:
+                alpha = best_score
+                best_action = child.action_done
+
+        return best_action
+
+    def minimax_max(self, node, alpha, beta):
+        """
+        Finds the largest value in the leaf nodes for pruning alpha-beta
+
+        @params:
+        node: a Node object
+        alpha, an int, representing the best value the algorithm has found
+        beta, an int, representing the worst play's evaluation score
+
+        Returns an int, score of the leaf node
+        """
+
+        #Check if the node is a leaf node
+        if len(node.children) == 0:
+            return node.eval
+
+        #Init negative infinity for finding best score
+        max_val = float('-inf')
+
+        for child in node.children.values():
+            max_val = max(max_val, self.minimax_min(child, alpha, beta))
+
+            #Check if found a better move for player
+            if max_val >= beta:
+                return max_val
+            else:
+                alpha = max(max_val, alpha)
+
+        return max_val
+
+    def minimax_min(self, node, alpha, beta):
+        """
+        Finds the smallest value in the leaf nodes for pruning alpha-beta
+
+        @params:
+        node: a Node object
+        alpha, an int, representing the best value the algorithm has found
+        beta, an int, representing the worst play's evaluation score
+
+        Returns an int, score of the leaf node
+        """
+
+        #Check if the node is a leaf node
+        if len(node.children) == 0:
+            return node.eval
+
+        #Init negative infinity and infinity
+        min_val = float('inf')
+
+        for child in node.children.values():
+            min_val = min(min_val, self.minimax_max(child, alpha, beta))
+
+            #Check if found the worst move for player
+            if min_val <= alpha:
+                return min_val
+            else:
+                beta = min(min_val, beta)
+
+        return min_val

@@ -13,11 +13,12 @@ black = [[1,0,7], [1,1,7],   [1,3,7], [1,4,7],   [1,6,7], [1,7,7],
 #Create a player agent
 player = Player('white')
 
-player.action()
+player.init_minimax()
 
-print(player.tree)
 #Change custom board layout if needed
-# root.update_node_state(test_player_list, black)
+# player.tree.update_node_state(test_player_list, black)
+
+print("\nBEST MOVE: ", player.action())
 
 #Get all available actions
 # root.evaluate_actions()
