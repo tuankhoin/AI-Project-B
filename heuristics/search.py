@@ -31,7 +31,7 @@ class Node:
         else:
             self.depth = 0
 
-        self.children = []
+        self.children = dict()
 
         self.actions = None
         self.eval = self.evaluate()
@@ -50,35 +50,33 @@ class Node:
 
     def expand(self,action):
         """Returns the resulted children from applying action"""
-        for child in self.children:
-            if child.action_done == action:
-                return child
+        if action in self.children:
+            return self.children[action]
         new_child = Node(self, action, self.player.color)
-        self.children.append(new_child)
+        self.children[action] = new_child
         return new_child
 
     def expand_minimax(self, action):
         """Returns the resulted children from applying action. 
             For use in minimax to switch turns"""
-        for child in self.children:
-            if child.action_done == action:
-                return child
+        if action in self.children:
+            return self.children[action]
         new_child = Node(self, action, self.player.color)
         swap_turn(new_child)
-        self.children.append(new_child)
+        self.children[action] = new_child
         return new_child
 
     def expand_all(self):
         """Expand all of a node's children"""
         for action in self.actions:
-            self.children.append(Node(self, action, self.player.color))
+            self.children[action] = Node(self, action, self.player.color)
 
     def expand_all_minimax(self):
         """Expand all of a node's children"""
         for action in self.actions:
             child = Node(self, action, self.player.color)
             swap_turn(child)
-            self.children.append(child)
+            self.children[action] = child
 
     def expand_null_move(self):
         """Expand the node for case of null move"""    
@@ -86,7 +84,7 @@ class Node:
         for action in opponent_actions:
             child = Node(self, action, self.player.color)
             swap_turn(child)
-            self.children.append(child)
+            self.children[action] = child
         pass
 
     def propagate_back(self):
