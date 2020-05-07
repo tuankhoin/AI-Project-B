@@ -37,8 +37,9 @@ class Node:
         self.eval = self.evaluate()
     def __str__(self):
         return "Resulted from: %s\n \
+        Depth: %d \t Player color: %s\n\
         Player stacks: %s\n \
-        Opponent stacks: %s" % (self.action_done, self.player.player, self.player.opponent)
+        Opponent stacks: %s" % (self.action_done, self.depth, self.player.color, self.player.player, self.player.opponent)
 
     def evaluate_actions(self):
         """Only retrieve the necessary actions when needed, to save space"""
@@ -67,12 +68,14 @@ class Node:
         return new_child
 
     def expand_all(self):
-        """Expand all of a node's children"""
+        """Expand all of a node's children\n
+        #WARNING: need to evaluate_actions first if you are using this, or it will return none"""
         for action in self.actions:
             self.children[action] = Node(self, action, self.player.color)
 
     def expand_all_minimax(self):
-        """Expand all of a node's children"""
+        """Expand all of a node's children, with turn swapping for minimax\n
+        #WARNING: need to evaluate_actions first if you are using this, or it will return none"""
         for action in self.actions:
             child = Node(self, action, self.player.color)
             swap_turn(child)
@@ -80,12 +83,14 @@ class Node:
 
     def expand_null_move(self):
         """Expand the node for case of null move"""    
-        opponent_actions = f.get_opponent_action(self.player)
-        for action in opponent_actions:
-            child = Node(self, action, self.player.color)
-            swap_turn(child)
-            self.children[action] = child
-        pass
+        swap_turn(self)
+        self.evaluate_actions()
+
+        self.expand_all_minimax()
+
+        # Reswap to make the node go back to normal
+        swap_turn(self)
+        self.actions = []
 
     def propagate_back(self):
         """Return the original node's action that resulted in this node"""
@@ -95,9 +100,9 @@ class Node:
         return root.action_done
 
     def update_node_state(self, player_list, opponent_list):
-        """By default the initial node created will represent the default board state.
-        This function is used to update the true state to the node
-        WARNING: Only use this on the initial node created"""
+        """By default the initial node created will represent the default board state.\n
+        This function is used to update the true state to the node\n
+        # WARNING: Only use this on the initial node created"""
         self.player.player = player_list
         self.player.opponent = opponent_list
 
@@ -186,5 +191,6 @@ def swap_turn(node):
     pointer = node.player.player
     node.player.player = node.player.opponent
     node.player.opponent = pointer
+    node.player.color = f.get_opponent_color(node.player)
 
 
