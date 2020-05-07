@@ -36,10 +36,10 @@ class Node:
         self.actions = None
         self.eval = None
     def __str__(self):
-        return "Resulted from: %s\n \
+        return "\tResulted from: %s\n\
         Depth: %d \t Player color: %s\n\
-        Player stacks: %s\n \
-        Opponent stacks: %s" % (self.action_done, self.depth, self.player.color, self.player.player, self.player.opponent)
+        Player stacks: %s\n\
+        Opponent stacks: %s\n" % (self.action_done, self.depth, self.player.color, self.player.player, self.player.opponent)
 
     def evaluate_actions(self):
         """Only retrieve the necessary actions when needed, to save space"""
