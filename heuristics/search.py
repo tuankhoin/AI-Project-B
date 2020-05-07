@@ -128,6 +128,7 @@ class Node:
             for granchild in ch.children.values():
                 val = granchild.evaluate()
                 # Update the minimum value for child
+                print(val,min_value,beta)
                 if val < min_value:
                     min_value = val
                     # If min_value is less than beta, leave the rest. The previous child node has produced a cutoff
@@ -142,6 +143,7 @@ class Node:
             else:
                 # Update what the previous child is
                 curr_action = ch.action_done
+                beta = min_value
         
         return cutoffs
 
