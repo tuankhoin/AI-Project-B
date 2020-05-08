@@ -4,7 +4,7 @@
 import math
 from copy import deepcopy
 import utils.functionality as f
-from boomers.player import ExamplePlayer as Player
+from random_agent.player import ExamplePlayer as Player
 
 class Node:
     """Each node will contains a player's state and its available moves: \n

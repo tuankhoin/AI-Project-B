@@ -49,6 +49,7 @@ class ExamplePlayer:
         # TODO: Decide what action to take, and return it
 
         #Expand the minimax tree
+        self.init_minimax()
         self.expand_minimax_tree(self.tree, cutoff=2)
 
         #Find the best move based from minimax leaf nodes
@@ -91,6 +92,7 @@ class ExamplePlayer:
         Creates a minimax tree stump as Node object
         """
         self.tree = Node(None, None, self.color)
+        self.tree.update_node_state(self.player, self.opponent)
 
     def expand_minimax_tree(self, node, cutoff=2):
         """
