@@ -30,7 +30,7 @@ class Player:
         # allocating correct state representation of player and opponent
         self.turn = 0
         # Transposition table using Zobrist Hashing
-        self.zobrist = [[[random.randint(1,2**64 - 1) for i in range(12)]for j in range(8)]for k in range(8)]
+        self.zobrist = [[[random.randint(1,2**64 - 1) for i in range(24)]for j in range(8)]for k in range(8)]
         self.history = Counter({self.to_hash(): 1})
         
     def __str__(self):
@@ -370,7 +370,7 @@ class Player:
             for j in range(8):
                 # check if token stack exists, then we index it
                 if (i,j) in self.black:
-                    h ^= self.zobrist[i][j][self.black[(i,j)]-1]
+                    h ^= self.zobrist[i][j][12+self.black[(i,j)]-1]
                 elif (i,j) in self.white:
                     h ^= self.zobrist[i][j][self.white[(i,j)]-1]
         return h
