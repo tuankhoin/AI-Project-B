@@ -4,6 +4,7 @@
 import math
 from copy import deepcopy
 import utils.functionality as f
+from collections import Counter
 from random_agent.player import ExamplePlayer as Player
 
 class Node:
@@ -15,6 +16,7 @@ class Node:
         actions: its available actions \n
         player: its representing game state \n
         eval: evalutation function result of node \n
+        history: transposition table of moves
         """
     def __init__(self, parent, action, color):
 
@@ -28,11 +30,16 @@ class Node:
             self.player.player = deepcopy(parent.player.player)
             self.player.opponent = deepcopy(parent.player.opponent)
             self.player.update(self.player.color, action)
+            #self.history = self.parent.history
+            #self.history[tuple(tuple(stack) for stack in self.player.player)] += 1
         else:
             self.depth = 0
+            #self.history = Counter({tuple(tuple(stack) for stack in self.player.player):1})
 
         self.children = dict()
         self.actions = None
+        #self.eval = -999
+
     def __str__(self):
         return "\tResulted from: %s\n\
         Depth: %d \t Player color: %s\n\
@@ -42,10 +49,6 @@ class Node:
     def evaluate_actions(self):
         """Only retrieve the necessary actions when needed, to save space"""
         self.actions = f.get_available_action(self.player)
-
-    def evaluate(self):
-        """Node's evaluation function"""
-        return 0
 
     def expand(self,action):
         """Returns the resulted children from applying action"""
@@ -77,6 +80,9 @@ class Node:
         for action in self.actions:
             child = Node(self, action, self.player.color)
             swap_turn(child)
+            # Check for repeated states
+            #if self.history[tuple(tuple(stack) for stack in child.player.player)] == 0:
+            #    self.children[action] = child
             self.children[action] = child
 
     def expand_null_move(self):
