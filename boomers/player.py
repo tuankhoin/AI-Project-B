@@ -1,47 +1,43 @@
-from utils.functionality import get_available_action, update_move, update_boom
-from copy import deepcopy
+from collections import Counter
 
-class ExamplePlayer:
+BOOM_RADIUS = [(-1,+1), (+0,+1), (+1,+1),
+               (-1,+0),          (+1,+0),
+               (-1,-1), (+0,-1), (+1,-1)]
+
+class Player:
     def __init__(self, colour):
         """
         This method is called once at the beginning of the game to initialise
         your player. You should use this opportunity to set up your own internal
-        representation of the game state, and any other information about the
+        representation of the game state, and any other information about the 
         game state you would like to maintain for the duration of the game.
 
-        The parameter colour will be a string representing the player your
-        program will play as (White or Black). The value will be one of the
+        The parameter colour will be a string representing the player your 
+        program will play as (White or Black). The value will be one of the 
         strings "white" or "black" correspondingly.
         """
         # TODO: Set up state representation.
         self.color = colour
-        self.turn = 0
-        self.player_prev = None
-        self.opponent_prev = None
-        # DEFAULT representation of a board: [ntoken, x, y]
-        black = [[1,0,7], [1,1,7],   [1,3,7], [1,4,7],   [1,6,7], [1,7,7],
-                 [1,0,6], [1,1,6],   [1,3,6], [1,4,6],   [1,6,6], [1,7,6]]
-        white = [[1,0,1], [1,1,1],   [1,3,1], [1,4,1],   [1,6,1], [1,7,1],
-                 [1,0,0], [1,1,0],   [1,3,0], [1,4,0],   [1,6,0], [1,7,0]]
+        self.black = Counter({(0,7):1, (1,7):1,   (3,7):1, (4,7):1,   (6,7):1, (7,7):1,
+                              (0,6):1, (1,6):1,   (3,6):1, (4,6):1,   (6,6):1, (7,6):1})
+        self.white = Counter({(0,1):1, (1,1):1,   (3,1):1, (4,1):1,   (6,1):1, (7,1):1,
+                              (0,0):1, (1,0):1,   (3,0):1, (4,0):1,   (6,0):1, (7,0):1})
+        
         # allocating correct state representation of player and opponent
-        if colour == 'white':
-            self.player = white
-            self.opponent = black
-        else:
-            self.player = black
-            self.opponent = white
+        self.turn = 0
+        
     def __str__(self):
-        return "Player color: %s\n \
-        Player stacks: %s\n \
-        Opponent stacks: %s" % (self.color, self.player, self.opponent)
+        return "\tPlayer color: %s\tTurn: %d\n \
+        Black stacks: %s\n \
+        White stacks: %s\n" % (self.color, self.turn, self.black, self.white)
 
 
     def action(self):
         """
-        This method is called at the beginning of each of your turns to request
+        This method is called at the beginning of each of your turns to request 
         a choice of action from your program.
 
-        Based on the current state of the game, your player should select and
+        Based on the current state of the game, your player should select and 
         return an allowed action to play on this turn. The action must be
         represented based on the spec's instructions for representing actions.
         """
@@ -60,9 +56,9 @@ class ExamplePlayer:
 
     def update(self, colour, action):
         """
-        This method is called at the end of every turn (including your player’s
-        turns) to inform your player about the most recent action. You should
-        use this opportunity to maintain your internal representation of the
+        This method is called at the end of every turn (including your player’s 
+        turns) to inform your player about the most recent action. You should 
+        use this opportunity to maintain your internal representation of the 
         game state and any other information about the game you are storing.
 
         The parameter colour will be a string representing the player whose turn
@@ -72,20 +68,229 @@ class ExamplePlayer:
         The parameter action is a representation of the most recent action
         conforming to the spec's instructions for representing actions.
 
-        You may assume that action will always correspond to an allowed action
+        You may assume that action will always correspond to an allowed action 
         for the player colour (your method does not need to validate the action
         against the game rules).
         """
         # TODO: Update state representation in response to action.
-        self.player_prev = deepcopy(self.player)
-        self.opponent_prev = deepcopy(self.opponent)
-
-        # Implementing suitable action update
         if action[0]=="MOVE":
-            current_player, current_opponent = update_move(self, colour, action)
+            self.update_move(colour, action)
         else:
-            current_player, current_opponent = update_boom(self, colour, action)
+            self.update_boom(colour, action)
 
-        self.player = current_player
-        self.opponent = current_opponent
         self.turn += 1
+        pass
+
+    def update_move(self, color, action):
+        """Updating the player status after a move action"""
+        # Check if move is from opponent or player
+        if color == 'black':
+            self.list_update(action, self.black)
+        else:
+            self.list_update(action, self.white)
+
+    def list_update(self, action, stack_list):
+        """Updating the status of the side that is on turn"""
+
+        # Update or delete from list
+        if action[1]==stack_list[action[2]]:
+            del stack_list[action[2]]
+        else:
+            stack_list[action[2]] -= action[1]
+
+        # Update new space
+        stack_list[action[3]] += action[1]
+
+
+    def update_boom(self, color, action):
+        """Updating the player status after a boom action"""
+
+        cluster_black = []
+        cluster_white = []
+
+        # Chain up the boomed ones, strating from the ignition
+        self.cluster(action[1], cluster_black, cluster_white)
+
+        # Detonating
+        for black_pos in cluster_black:
+            del self.black[black_pos]
+        for white_pos in cluster_white:
+            del self.white[white_pos]
+
+    def cluster(self, position, cluster_black, cluster_white):
+        """Recursively adding adjacent stacks to the cluster lists"""
+        if self.black[position] != 0:
+            cluster_black.append(position)
+        elif self.white[position] != 0:
+            cluster_white.append(position)
+
+        # Recursive chaining to list for player stacks
+        x,y = position
+        for dx,dy in BOOM_RADIUS:
+            if self.black[(x+dx, y+dy)] != 0 and (x+dx, y+dy) not in cluster_black:
+                self.cluster((x+dx, y+dy), cluster_black, cluster_white)
+            if self.white[(x+dx, y+dy)] != 0 and (x+dx, y+dy) not in cluster_white:
+                self.cluster((x+dx, y+dy), cluster_black, cluster_white)
+
+    def get_clusters(self):
+        """Retrieve a list of clusters_array of type [clustered_player, clustered_opponent]
+            cluster_array[0]: Array of black stacks in the cluster
+            cluster_array[1]: Array of white stacks in the cluster"""
+        clusters = []
+        is_added = False
+
+        # Iterate through each black position in the collection
+        for pos in self.black:
+            is_added = False
+            # See if each created cluster contains the position yet
+            for cluster_element in clusters:
+                if pos in cluster_element[0]:
+                    is_added = True
+                    break
+            # If not, append a new cluster to the list
+            if not is_added:
+                l = len(clusters)
+                clusters.append([[],[]])
+                self.cluster(pos, clusters[l][0], clusters[l][1])
+        # Do the same for white positions
+        for pos in self.white:
+            is_added = False
+            for cluster_element in clusters:
+                if pos in cluster_element[1]:
+                    is_added = True
+                    break
+            if not is_added:
+                l = len(clusters)
+                clusters.append([[],[]])
+                self.cluster(pos, clusters[l][0], clusters[l][1])
+        return clusters
+
+    def get_total_tokens(self):
+        """
+        Counts the total number of tokens a given color has. Adds up each stack for
+        the faction in question.
+
+        Returns 2 positive ints, total number of tokens for black and white respectively
+        """
+        total_black = sum(self.black.values())
+        total_white = sum(self.white.values())
+        return total_black, total_white
+
+
+    def get_opponent_color(self):
+        """Return a player's opponent color"""
+        if self.color == 'white':
+            return 'black'
+        elif self.color == 'black':
+            return 'white'
+        else:
+            return None
+
+    def get_available_action(self, is_black=True):
+        """Returns a list that contains the available moves of a color, black by default \n
+        Put False to argument to get action of whites"""
+        action_list = []
+        if is_black:
+            player_list = self.black
+            opponent_list = self.white
+        else:
+            player_list = self.white
+            opponent_list = self.black
+
+        # For each token on board:
+        for pos in player_list:
+            x, y = pos
+            action_list.append(('BOOM', pos))
+
+            # Check for all available horizontal moves
+            num_tokens = player_list[pos]
+            for i in range(x-num_tokens, x+num_tokens+1):
+                # Out bound/null move checking
+                #print(i,y)
+                if i == x or i<0 or i>7:
+                    continue
+                # Check if space is occupied by rival's stack
+                if (i,y) not in opponent_list:
+                    # All available moves in range
+                    for j in range(1, num_tokens+1):
+                        action_list.append(('MOVE', j, pos, (i,y)))
+
+            # Check for all available vertical moves
+            for i in range(y-num_tokens, y+num_tokens+1):
+                if i == y or i<0 or i>7:
+                    continue
+                if (x,i) not in opponent_list:
+                    for j in range(1, num_tokens+1):
+                        action_list.append(('MOVE', j, pos, (x,i)))
+        return action_list
+
+    def to_hash(self):
+        """Returns the hash value of state to store in the transposition table"""
+        pass
+
+    def evaluate(self):
+        """
+        Evaluates the leaf node's game state as advantageous for the player or
+        Opponent
+
+        ASSUMES MORE THAN 2-PLY SEARCH
+
+        Considers symmetric score of:
+        number of player tokens at the root node
+        number of opponent tokens at root node
+        number of player tokens at the leaf node
+        number of opponent tokens at leaf node
+
+        @params
+        curr_node: a Node object, a leaf node of a minimax tree
+
+        Returns an int representing the score of the action:
+        positive int: advantageous towards player
+        negative int: advantageous towards opponent
+        """
+
+        """
+        #Record the token counts for both colors at the root node
+        start_opponent = self.get_total_tokens(self.color == 'white')
+        start_allies = self.get_total_tokens(self.color == 'black')
+        #Record token counts for both colors at leaf node
+        opponent_count = self.get_total_tokens(curr_node.player.opponent)
+        allies_count = self.get_total_tokens(curr_node.player.player)
+
+        #Calculate the symmetric evaluation score
+        score = (start_allies - start_opponent) \
+                - (opponent_count - allies_count)
+        """
+        score = 0
+        return score
+
+class Node:
+    """Each node will contains a player's state and its available moves: \n
+        depth: node depth. Initial node is 0 in depth \n
+        action_done: resulted action that create the node, null if first \n
+        parent: its predecessor state, null if first \n
+        children: its list of following steps \n
+        actions: its available actions \n
+        player: its representing game state \n
+        eval: evalutation function result of node \n
+        history: transposition table of moves
+        """
+    def __init__(self, player):
+
+        self.player = player
+
+        self.parent = None
+        self.action_done = None
+        self.depth = 0
+        #self.history = Counter({:1})
+
+        self.children = dict()
+        self.actions = None
+        self.eval = player.evaluate()
+
+    def __str__(self):
+        return "\tResulted from: %s\n\
+        Depth: %d \t Player color: %s\n\
+        Player stacks: %s\n\
+        Opponent stacks: %s\n" % (self.action_done, self.depth, self.player.color, self.player.player, self.player.opponent)
+
