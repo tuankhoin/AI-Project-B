@@ -1,8 +1,11 @@
 from collections import Counter
+from copy import deepcopy
 
 BOOM_RADIUS = [(-1,+1), (+0,+1), (+1,+1),
                (-1,+0),          (+1,+0),
                (-1,-1), (+0,-1), (+1,-1)]
+
+hash_table = Counter()
 
 class Player:
     def __init__(self, colour):
@@ -42,17 +45,25 @@ class Player:
         represented based on the spec's instructions for representing actions.
         """
         # TODO: Decide what action to take, and return it
-        if self.turn == 1 and self.color == 'white':
+        # Decide the first few moves to save up space and time
+        if self.turn == 0 and self.color == 'white':
             return ("MOVE", 1, (3,1), (4,1))
-        elif self.turn == 2 and self.color == 'black':
+        elif self.turn == 1 and self.color == 'black':
             return ("MOVE", 1, (4,6), (3,6))
-        elif self.turn == 3 and self.color == 'white':
+        elif self.turn == 2 and self.color == 'white':
             return ("MOVE", 2, (4,1), (4,3))
-        elif self.turn == 4 and self.color == 'black':
+        elif self.turn == 3 and self.color == 'black':
             return ("MOVE", 2, (3,6), (3,4))
-        else:
-            return ("BOOM", (0, 0))
+        if self.turn == 4 and self.color == 'white':
+            if self.black[(4,5)] == 0:
+                return ("MOVE", 1, (4,3), (4,5))
+        if self.turn == 5 and self.color == 'black':
+            if self.white[(3,2)] == 0 and self.black[(3,4)] != 0:
+                return ("MOVE", 1, (3,4), (3,2))
+        return self.get_action()
 
+    def get_action(self):
+        pass
 
     def update(self, colour, action):
         """
@@ -79,7 +90,6 @@ class Player:
             self.update_boom(colour, action)
 
         self.turn += 1
-        pass
 
     def update_move(self, color, action):
         """Updating the player status after a move action"""
@@ -225,8 +235,12 @@ class Player:
         return action_list
 
     def to_hash(self):
-        """Returns the hash value of state to store in the transposition table"""
-        pass
+        """Returns the hash value of state to store in the transposition table
+        Idea taken from Zobrist Hashing and referee.game"""
+        return (
+            tuple((pos,n) for pos,n in sorted(self.white.items())+sorted(self.black.items())), 
+            self.turn % 2,
+        )
 
     def evaluate(self):
         """
@@ -270,10 +284,8 @@ class Node:
         action_done: resulted action that create the node, null if first \n
         parent: its predecessor state, null if first \n
         children: its list of following steps \n
-        actions: its available actions \n
         player: its representing game state \n
         eval: evalutation function result of node \n
-        history: transposition table of moves
         """
     def __init__(self, player):
 
@@ -281,16 +293,50 @@ class Node:
 
         self.parent = None
         self.action_done = None
-        self.depth = 0
-        #self.history = Counter({:1})
 
-        self.children = dict()
-        self.actions = None
-        self.eval = player.evaluate()
+        # depth % 2 == 0 : Player in turn (max)
+        # depth % 2 != 0 : Opponent in turn (min)
+        self.depth = 0
+
+        # children and actions: Only generated upon expanding
+        self.children = {}
+        self.eval = 0
 
     def __str__(self):
         return "\tResulted from: %s\n\
         Depth: %d \t Player color: %s\n\
-        Player stacks: %s\n\
-        Opponent stacks: %s\n" % (self.action_done, self.depth, self.player.color, self.player.player, self.player.opponent)
+        Black stacks: %s\n\
+        White stacks: %s\n" % (self.action_done, self.depth, self.player.color, self.player.black, self.player.white)
+
+    def expand(self, color, action):
+        """Expand each action to a child node for use in minimax"""
+        child = Node(deepcopy(self.player))
+
+        child.player.update(color, action)
+        child.player.color = self.player.get_opponent_color()
+        child.parent = self
+        child.action_done = action
+        child.depth = self.depth + 1
+
+        #if hash_table[self.player.to_hash()] == 0:
+        self.children[action] = child
+
+    def expand_all(self):
+        """Expanding all available actions into children nodes for minimax"""
+        actions = self.player.get_available_action(self.player.color == 'black')
+
+        for action in actions:
+            self.expand(self.player.color,action)
+
+    def propagate_back(self):
+        """Return the original node's action that resulted in this node"""
+        root = self.parent
+        while root.parent.parent != None:
+            root = root.parent
+        return root.action_done
+
+
+    
+
+
 

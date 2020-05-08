@@ -1,5 +1,5 @@
 """Run this script to test the newly implemented functions"""
-from boomers.player import ExamplePlayer as Player
+from minimax_agent.player import ExamplePlayer as Player
 import utils.functionality as f
 
 player = Player('white')
