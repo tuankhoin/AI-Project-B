@@ -1,11 +1,11 @@
 from collections import Counter
 from copy import deepcopy
 
+
+
 BOOM_RADIUS = [(-1,+1), (+0,+1), (+1,+1),
                (-1,+0),          (+1,+0),
                (-1,-1), (+0,-1), (+1,-1)]
-
-hash_table = Counter()
 
 class Player:
     def __init__(self, colour):
@@ -28,6 +28,7 @@ class Player:
         
         # allocating correct state representation of player and opponent
         self.turn = 0
+        self.history = Counter({self.to_hash(): 1})
         
     def __str__(self):
         return "\tPlayer color: %s\tTurn: %d\n \
@@ -63,7 +64,126 @@ class Player:
         return self.get_action()
 
     def get_action(self):
-        pass
+        #Expand the minimax tree
+        tree_root = Node(self)
+        self.expand_minimax_tree(tree_root, cutoff=2)
+
+        #Find the best move based from minimax leaf nodes
+        action = self.minimax_alpha_beta(tree_root)
+        return action
+
+    def expand_minimax_tree(self, node, cutoff=2):
+        """
+        Expands the minimax tree recursively until a certain depth, alternating between
+        player and opponent actions
+
+        Iterates over the player's tree object
+        Minimax tree must be a stump and not None
+
+        @params:
+        cutoff: default=2, a positive int representing depth of tree to stop
+                expansion
+        """
+        #Guard condition
+        if cutoff <= 0:
+            #Evaluate each node at the cutoff depth
+            node.eval = node.evaluate()
+            return
+
+        #Expand the parent node first
+        node.expand_all()
+
+        #Expand each child for each node until cutoff reached
+        for child in node.children.values():
+            self.expand_minimax_tree(child, cutoff-1)
+
+    def minimax_alpha_beta(self,tree):
+        """
+        Finds the best action, using Alpha-Beta pruning, from an expanded
+        minimax tree.
+
+        ASSUMPTION:
+        - minimax tree has been fully expanded to its leaf nodes
+
+        Returns an action tuple of the best move
+        """
+        #Initialize [-infinity, infinity]
+        alpha = float('-inf')
+        beta = float('inf')
+        best_action = None
+
+        #Start alpha-beta search and expansion
+        for child in tree.children.values():
+            best_score = self.minimax_min(child, alpha, beta)
+
+            print("\nNode: ", child, " has score: ", best_score)
+            #If the value found after going down a branch is better, use the
+            #value as the new alpha
+            if best_score > alpha:
+                alpha = best_score
+                best_action = child.action_done
+
+        return best_action
+
+    def minimax_max(self, node, alpha, beta):
+        """
+        Finds the largest value in the leaf nodes for pruning alpha-beta
+
+        @params:
+        node: a Node object
+        alpha, an int, representing the best value the algorithm has found
+        beta, an int, representing the worst play's evaluation score
+
+        Returns an int, score of the leaf node
+        """
+
+        #Check if the node is a leaf node
+        if len(node.children) == 0:
+            return node.eval
+
+        #Init negative infinity for finding best score
+        max_val = float('-inf')
+
+        for child in node.children.values():
+            max_val = max(max_val, self.minimax_min(child, alpha, beta))
+
+            #Check if found a better move for player
+            if max_val >= beta:
+                return max_val
+            else:
+                alpha = max(max_val, alpha)
+
+        return max_val
+
+    def minimax_min(self, node, alpha, beta):
+        """
+        Finds the smallest value in the leaf nodes for pruning alpha-beta
+
+        @params:
+        node: a Node object
+        alpha, an int, representing the best value the algorithm has found
+        beta, an int, representing the worst play's evaluation score
+
+        Returns an int, score of the leaf node
+        """
+
+        #Check if the node is a leaf node
+        if len(node.children) == 0:
+            return node.eval
+
+        #Init negative infinity and infinity
+        min_val = float('inf')
+
+        for child in node.children.values():
+            min_val = min(min_val, self.minimax_max(child, alpha, beta))
+
+            #Check if found the worst move for player
+            if min_val <= alpha:
+                return min_val
+            else:
+                beta = min(min_val, beta)
+
+        return min_val
 
     def update(self, colour, action):
         """
@@ -90,6 +210,7 @@ class Player:
             self.update_boom(colour, action)
 
         self.turn += 1
+        self.history[self.to_hash()] += 1
 
     def update_move(self, color, action):
         """Updating the player status after a move action"""
@@ -286,6 +407,7 @@ class Node:
         children: its list of following steps \n
         player: its representing game state \n
         eval: evalutation function result of node \n
+        table: the transposition table to detect repeated states \n
         """
     def __init__(self, player):
 
@@ -301,6 +423,10 @@ class Node:
         # children and actions: Only generated upon expanding
         self.children = {}
         self.eval = 0
+
+        # transposition table
+        self.table = Counter()
+        self.table.update(self.player.history)
 
     def __str__(self):
         return "\tResulted from: %s\n\
@@ -318,8 +444,11 @@ class Node:
         child.action_done = action
         child.depth = self.depth + 1
 
-        #if hash_table[self.player.to_hash()] == 0:
-        self.children[action] = child
+        # Only append to tree if the new child does not repeat any state
+        child_hash_key = child.player.to_hash()
+        if not self.table[child_hash_key]:
+            self.children[action] = child
+            self.table[child_hash_key] += 1
 
     def expand_all(self):
         """Expanding all available actions into children nodes for minimax"""
@@ -334,6 +463,10 @@ class Node:
         while root.parent.parent != None:
             root = root.parent
         return root.action_done
+
+    def evaluate(self):
+        """Evaluate function of a node"""
+        return self.player.evaluate() + 0
 
 
     
