@@ -1,3 +1,4 @@
+import random
 from collections import Counter
 from copy import deepcopy
 
@@ -28,6 +29,8 @@ class Player:
         
         # allocating correct state representation of player and opponent
         self.turn = 0
+        # Transposition table using Zobrist Hashing
+        self.zobrist = [[[random.randint(1,2**64 - 1) for i in range(12)]for j in range(8)]for k in range(8)]
         self.history = Counter({self.to_hash(): 1})
         
     def __str__(self):
@@ -357,11 +360,20 @@ class Player:
 
     def to_hash(self):
         """Returns the hash value of state to store in the transposition table
-        Idea taken from Zobrist Hashing and referee.game"""
-        return (
-            tuple((pos,n) for pos,n in sorted(self.white.items())+sorted(self.black.items())), 
-            self.turn % 2,
-        )
+        Idea taken from Zobrist Hashing"""
+        #return (
+        #    tuple((pos,n) for pos,n in sorted(self.white.items())+sorted(self.black.items())), 
+        #    self.turn % 2,
+        #)
+        h = 0
+        for i in range(8):
+            for j in range(8):
+                # check if token stack exists, then we index it
+                if (i,j) in self.black:
+                    h ^= self.zobrist[i][j][self.black[(i,j)]-1]
+                elif (i,j) in self.white:
+                    h ^= self.zobrist[i][j][self.white[(i,j)]-1]
+        return h
 
     def evaluate(self):
         """
