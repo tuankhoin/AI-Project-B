@@ -103,7 +103,7 @@ class Player:
         #Guard condition
         if cutoff <= 0:
             #Evaluate each node at the cutoff depth
-            node.eval = node.evaluate()
+            node.eval = node.player.evaluate()
             return
 
         #Expand the parent node first
@@ -154,7 +154,7 @@ class Player:
         """
 
         #Check if the node is a leaf node
-        if len(node.children) == 0:
+        if node.children == None:
             return node.eval
 
         for child in node.children.values():
@@ -179,7 +179,7 @@ class Player:
         """
 
         #Check if the node is a leaf node
-        if len(node.children) == 0:
+        if node.children == None:
             return node.eval
 
         for child in node.children.values():
@@ -456,25 +456,35 @@ class Node:
         table: the transposition table to detect repeated states \n
         """
     def __init__(self, player, initial = True):
-
-        self.player = player
-
-        self.parent = None
-        self.action_done = None
-
-        # depth % 2 == 0 : Player in turn (max)
-        # depth % 2 != 0 : Opponent in turn (min)
-        self.depth = 0
-
-        # children and actions: Only generated upon expanding
-        self.children = {}
-        self.eval = 0
-
-        # transposition table
         if initial:
+            self.player = player
+            self.parent = None
+            self.action_done = None
+
+            # depth % 2 == 0 : Player in turn (max)
+            # depth % 2 != 0 : Opponent in turn (min)
+            self.depth = 0
+
+            # children and actions: Only generated upon expanding
+            self.children = None
+            self.eval = 0
+
+            # transposition table
             self.table = Counter()
             self.table.update(history)
         else:
+            self.player = None
+            self.parent = None
+            self.action_done = None
+
+            # depth % 2 == 0 : Player in turn (max)
+            # depth % 2 != 0 : Opponent in turn (min)
+            self.depth = 0
+
+            # children and actions: Only generated upon expanding
+            self.children = None
+            self.eval = 0
+
             self.table = None
 
     def __str__(self):
@@ -485,7 +495,8 @@ class Node:
 
     def expand(self, color, action):
         """Expand each action to a child node for use in minimax"""
-        child = Node(deepcopy(self.player), False)
+        child = Node(None, False)
+        child.player = deepcopy(self.player)
 
         child.player.update(color, action)
         child.player.color = self.player.get_opponent_color()
@@ -502,6 +513,7 @@ class Node:
 
     def expand_all(self):
         """Expanding all available actions into children nodes for minimax"""
+        self.children = {}
         actions = self.player.get_available_action(self.player.color == 'black')
 
         for action in actions:
@@ -514,9 +526,6 @@ class Node:
             root = root.parent
         return root.action_done
 
-    def evaluate(self):
-        """Evaluate function of a node"""
-        return self.player.evaluate() + 0
 
 
     
