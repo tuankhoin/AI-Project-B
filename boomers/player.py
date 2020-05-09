@@ -1,27 +1,29 @@
 import random
+import math
 from collections import Counter
-from copy import deepcopy
+from copy import deepcopy, copy
 
+CONTROL_AREA = [(x,y) for x in range(1,7) for y in range(3,5)]
 
+CORNER_AREA = [(x,y) for x in [0,1,6,7] for y in [0,1,6,7]]
 
 BOOM_RADIUS = [(-1,+1), (+0,+1), (+1,+1),
                (-1,+0),          (+1,+0),
                (-1,-1), (+0,-1), (+1,-1)]
 
+ZOBRIST = [[[random.randint(1,2**64 - 1) for i in range(24)]for j in range(8)]for k in range(8)]
+
 class Player:
     def __init__(self, colour):
         """
-        This method is called once at the beginning of the game to initialise
-        your player. You should use this opportunity to set up your own internal
-        representation of the game state, and any other information about the 
-        game state you would like to maintain for the duration of the game.
-
-        The parameter colour will be a string representing the player your 
-        program will play as (White or Black). The value will be one of the 
-        strings "white" or "black" correspondingly.
+        The main player class the represents the state
         """
         # TODO: Set up state representation.
+
+        # The color that is in turn
         self.color = colour
+        # The color that needs to win the game, and will be constant throughout the game
+        self.true_color = colour
         self.black = Counter({(0,7):1, (1,7):1,   (3,7):1, (4,7):1,   (6,7):1, (7,7):1,
                               (0,6):1, (1,6):1,   (3,6):1, (4,6):1,   (6,6):1, (7,6):1})
         self.white = Counter({(0,1):1, (1,1):1,   (3,1):1, (4,1):1,   (6,1):1, (7,1):1,
@@ -30,7 +32,6 @@ class Player:
         # allocating correct state representation of player and opponent
         self.turn = 0
         # Transposition table using Zobrist Hashing
-        self.zobrist = [[[random.randint(1,2**64 - 1) for i in range(24)]for j in range(8)]for k in range(8)]
         self.history = Counter({self.to_hash(): 1})
         
     def __str__(self):
@@ -69,7 +70,17 @@ class Player:
     def get_action(self):
         #Expand the minimax tree
         tree_root = Node(self)
-        self.expand_minimax_tree(tree_root, cutoff=2)
+        blacks, whites = self.get_total_tokens()
+        
+        # Middlegame
+        if blacks<7 and whites<7 and blacks>2 and whites>2:
+            self.expand_minimax_tree(tree_root, cutoff=3)
+        # Endgame
+        elif blacks <=2 and whites <=2:
+            self.expand_minimax_tree(tree_root, cutoff=4)
+        # Opengame
+        else:
+            self.expand_minimax_tree(tree_root, cutoff=2)
 
         #Find the best move based from minimax leaf nodes
         action = self.minimax_alpha_beta(tree_root)
@@ -119,7 +130,7 @@ class Player:
         for child in tree.children.values():
             best_score = self.minimax_min(child, alpha, beta)
 
-            print("\nNode: ", child, " has score: ", best_score)
+            #print("\nNode: ", child, " has score: ", best_score)
             #If the value found after going down a branch is better, use the
             #value as the new alpha
             if best_score > alpha:
@@ -144,19 +155,14 @@ class Player:
         if len(node.children) == 0:
             return node.eval
 
-        #Init negative infinity for finding best score
-        max_val = float('-inf')
-
         for child in node.children.values():
-            max_val = max(max_val, self.minimax_min(child, alpha, beta))
+            alpha = max(alpha, self.minimax_min(child, alpha, beta))
 
             #Check if found a better move for player
-            if max_val >= beta:
-                return max_val
-            else:
-                alpha = max(max_val, alpha)
+            if alpha >= beta:
+                return beta
 
-        return max_val
+        return alpha
 
     def minimax_min(self, node, alpha, beta):
         """
@@ -174,19 +180,14 @@ class Player:
         if len(node.children) == 0:
             return node.eval
 
-        #Init negative infinity and infinity
-        min_val = float('inf')
-
         for child in node.children.values():
-            min_val = min(min_val, self.minimax_max(child, alpha, beta))
+            beta = min(beta, self.minimax_max(child, alpha, beta))
 
             #Check if found the worst move for player
-            if min_val <= alpha:
-                return min_val
-            else:
-                beta = min(min_val, beta)
+            if beta <= alpha:
+                return alpha
 
-        return min_val
+        return beta
 
     def update(self, colour, action):
         """
@@ -361,55 +362,86 @@ class Player:
     def to_hash(self):
         """Returns the hash value of state to store in the transposition table
         Idea taken from Zobrist Hashing"""
+
+        # Tuple hashing method to compare
         #return (
         #    tuple((pos,n) for pos,n in sorted(self.white.items())+sorted(self.black.items())), 
         #    self.turn % 2,
         #)
+
+        # Zobrist hashing
         h = 0
         for i in range(8):
             for j in range(8):
                 # check if token stack exists, then we index it
                 if (i,j) in self.black:
-                    h ^= self.zobrist[i][j][12+self.black[(i,j)]-1]
+                    h ^= ZOBRIST[i][j][12+self.black[(i,j)]-1]
                 elif (i,j) in self.white:
-                    h ^= self.zobrist[i][j][self.white[(i,j)]-1]
+                    h ^= ZOBRIST[i][j][self.white[(i,j)]-1]
         return h
 
-    def evaluate(self):
+    def evaluate(self, weight = [10, 10, 3, 2]):
         """
         Evaluates the leaf node's game state as advantageous for the player or
         Opponent
 
-        ASSUMES MORE THAN 2-PLY SEARCH
-
-        Considers symmetric score of:
-        number of player tokens at the root node
-        number of opponent tokens at root node
-        number of player tokens at the leaf node
-        number of opponent tokens at leaf node
-
-        @params
-        curr_node: a Node object, a leaf node of a minimax tree
-
-        Returns an int representing the score of the action:
-        positive int: advantageous towards player
-        negative int: advantageous towards opponent
+        (+): Advantegous for player \n
+        (-): Advantageous for opponent
         """
 
-        """
-        #Record the token counts for both colors at the root node
-        start_opponent = self.get_total_tokens(self.color == 'white')
-        start_allies = self.get_total_tokens(self.color == 'black')
-        #Record token counts for both colors at leaf node
-        opponent_count = self.get_total_tokens(curr_node.player.opponent)
-        allies_count = self.get_total_tokens(curr_node.player.player)
+        # Total tokens, and decide which color is the enemy
+        tblack, twhite = self.get_total_tokens()
+        if self.true_color == 'black':
+            t_opponent, t_player = twhite, tblack
+            player_tokens = self.black
+            opponent_tokens = self.white
+        else:
+            t_opponent, t_player = tblack, twhite
+            player_tokens = self.white
+            opponent_tokens = self.black
+        #print(t_player, t_opponent)
 
-        #Calculate the symmetric evaluation score
-        score = (start_allies - start_opponent) \
-                - (opponent_count - allies_count)
+        # Detect immediate win/loss
+        if t_player == 0 and t_opponent != 0:
+            return -math.inf
+        elif t_player != 0 and t_opponent == 0:
+            return math.inf
+
+        # Center control bonus/penalty
+        control = 0
+        for center_sq in CONTROL_AREA:
+            control += player_tokens[center_sq]
+            control -= opponent_tokens[center_sq]
+        #print("Control:", control)
+
+        # Corner penalty for player and bonus for opponents
+        corner_stacks = 0
+        for corner in CORNER_AREA:
+            corner_stacks += opponent_tokens[corner]
+            corner_stacks -= player_tokens[corner]
+        #print("Corner:",corner_stacks)
+
         """
-        score = 0
+        # Cluster potentials
+        cluster_chain = 0
+        for cluster in self.get_clusters():
+            if cluster[0] and cluster[1]:
+                for b in cluster[0]:
+                    cluster_chain += self.black[b]
+                for w in cluster[1]:
+                    cluster_chain -= self.white[w] 
+                #print("Cluser's weight:", cluster_chain)
+        if self.true_color == 'white':
+            cluster_chain *= -1
+        """
+
+        score = weight[0]*t_player      \
+              - weight[1]*t_opponent    \
+              + weight[2]*control       \
+              + weight[3]*corner_stacks \
+              #+ weight[4]*cluster_chain
         return score
+
 
 class Node:
     """Each node will contains a player's state and its available moves: \n
