@@ -13,6 +13,9 @@ BOOM_RADIUS = [(-1,+1), (+0,+1), (+1,+1),
 
 ZOBRIST = [[[random.randint(1,2**64 - 1) for i in range(24)]for j in range(8)]for k in range(8)]
 
+# Transposition table using Zobrist Hashing
+history = Counter()
+
 class Player:
     def __init__(self, colour):
         """
@@ -31,8 +34,7 @@ class Player:
         
         # allocating correct state representation of player and opponent
         self.turn = 0
-        # Transposition table using Zobrist Hashing
-        self.history = Counter({self.to_hash(): 1})
+        history.update({self.to_hash(): 1})
         
     def __str__(self):
         return "\tPlayer color: %s\tTurn: %d\n \
@@ -214,7 +216,7 @@ class Player:
             self.update_boom(colour, action)
 
         self.turn += 1
-        self.history[self.to_hash()] += 1
+        history[self.to_hash()] += 1
 
     def update_move(self, color, action):
         """Updating the player status after a move action"""
@@ -453,7 +455,7 @@ class Node:
         eval: evalutation function result of node \n
         table: the transposition table to detect repeated states \n
         """
-    def __init__(self, player):
+    def __init__(self, player, initial = True):
 
         self.player = player
 
@@ -469,8 +471,11 @@ class Node:
         self.eval = 0
 
         # transposition table
-        self.table = Counter()
-        self.table.update(self.player.history)
+        if initial:
+            self.table = Counter()
+            self.table.update(history)
+        else:
+            self.table = None
 
     def __str__(self):
         return "\tResulted from: %s\n\
@@ -480,13 +485,14 @@ class Node:
 
     def expand(self, color, action):
         """Expand each action to a child node for use in minimax"""
-        child = Node(deepcopy(self.player))
+        child = Node(deepcopy(self.player), False)
 
         child.player.update(color, action)
         child.player.color = self.player.get_opponent_color()
         child.parent = self
         child.action_done = action
         child.depth = self.depth + 1
+        child.table = self.table
 
         # Only append to tree if the new child does not repeat any state
         child_hash_key = child.player.to_hash()
