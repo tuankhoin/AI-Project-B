@@ -1,3 +1,6 @@
+"""
+This is the main script for random_agent, an agent that makes random available moves
+"""
 import random
 from utils.functionality import get_available_action, update_move, update_boom
 

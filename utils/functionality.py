@@ -1,3 +1,10 @@
+""" 
+NOTE: THIS IS THE OLD IMPLEMENTATION SCRIPT FOR BOOMERS.
+      THE SCRIPTS ARE KEPT TO MAINTAIN THE random_agent PACKAGE
+"""
+
+""" The util package used to update and evaluate basic functionalities on a player """
+
 def get_opponent_color(player):
     """Return a player's opponent color"""
     if player.color == 'white':

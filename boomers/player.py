@@ -1,3 +1,6 @@
+"""
+The main agent class of Boomers
+"""
 import random
 import math
 from collections import Counter
@@ -32,7 +35,6 @@ class Player:
         self.white = Counter({(0,1):1, (1,1):1,   (3,1):1, (4,1):1,   (6,1):1, (7,1):1,
                               (0,0):1, (1,0):1,   (3,0):1, (4,0):1,   (6,0):1, (7,0):1})
         
-        # allocating correct state representation of player and opponent
         self.turn = 0
         #history.update({self.to_hash(): 1})
         
@@ -55,18 +57,24 @@ class Player:
         # Decide the first few moves to save up space and time
         if self.turn == 0 and self.color == 'white':
             return ("MOVE", 1, (3,1), (4,1))
+
         elif self.turn == 1 and self.color == 'black':
             return ("MOVE", 1, (4,6), (3,6))
+
         elif self.turn == 2 and self.color == 'white':
             return ("MOVE", 2, (4,1), (4,3))
+
         elif self.turn == 3 and self.color == 'black':
             return ("MOVE", 2, (3,6), (3,4))
+
         if self.turn == 4 and self.color == 'white':
             if self.black[(4,5)] == 0:
                 return ("MOVE", 1, (4,3), (4,5))
+
         if self.turn == 5 and self.color == 'black':
             if self.white[(3,2)] == 0 and self.black[(3,4)] != 0:
                 return ("MOVE", 1, (3,4), (3,2))
+
         return self.get_action()
 
     def get_action(self):

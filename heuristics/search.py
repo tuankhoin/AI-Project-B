@@ -1,6 +1,9 @@
+""" 
+NOTE: THIS IS THE OLD IMPLEMENTATION SCRIPT FOR BOOMERS.
+      THE SCRIPTS ARE KEPT TO MAINTAIN THE random_agent PACKAGE
+"""
 """ This is the collection package of search utilities and heuristic
-    functions to apply on agents that use heuristics 
-    Goal: Find a space that brings the most opponent cluster"""
+    functions to apply on agents that use heuristics """
 import math
 from copy import deepcopy
 import utils.functionality as f
