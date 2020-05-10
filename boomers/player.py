@@ -14,6 +14,8 @@ BOOM_RADIUS = [(-1,+1), (+0,+1), (+1,+1),
                (-1,+0),          (+1,+0),
                (-1,-1), (+0,-1), (+1,-1)]
 
+QUIET_THRESHOLD = 0.25
+
 ZOBRIST = [[[random.randint(1,2**64 - 1) for i in range(24)]for j in range(8)]for k in range(8)]
 
 # History table using Zobrist Hashing, only use when need to detect cycles
@@ -152,7 +154,7 @@ class Player:
 
         return best_action
 
-    def minimax_max(self, node, alpha, beta):
+    def minimax_max(self, node, alpha, beta, quiescence = False):
         """
         Finds the largest value in the leaf nodes for pruning alpha-beta
 
@@ -166,12 +168,21 @@ class Player:
 
         #Check if the node is a leaf node
         if node.children == None:
-            return node.eval
+            # If the search is of a quiescence search, terminate
+            if quiescence:
+                return node.eval
+            else:
+                # Expand the search for moves that do not make big difference to state
+                root = node.propagate_back()                
+                if abs(node.eval-root.eval) < QUIET_THRESHOLD:
+                    return self.quiescence(node, alpha, beta, find_min=False)
+                else:
+                    return node.eval
 
         v = -math.inf
 
         for child in node.children.values():
-            v = max(v, self.minimax_min(child, alpha, beta))
+            v = max(v, self.minimax_min(child, alpha, beta, quiescence))
 
             #Check if found a better move for player
             if v >= beta:
@@ -179,7 +190,7 @@ class Player:
             alpha = max(alpha,v)
         return v
 
-    def minimax_min(self, node, alpha, beta):
+    def minimax_min(self, node, alpha, beta, quiescence = False):
         """
         Finds the smallest value in the leaf nodes for pruning alpha-beta
 
@@ -193,18 +204,38 @@ class Player:
 
         #Check if the node is a leaf node
         if node.children == None:
-            return node.eval
+            # If the search is of a quiescence search, terminate
+            if quiescence:
+                return node.eval
+            else:
+                # Expand the search for moves that do not make big difference to state
+                root = node.propagate_back()                
+                if abs(node.eval-root.eval) < QUIET_THRESHOLD:
+                    return self.quiescence(node, alpha, beta, find_min=True)
+                else:
+                    return node.eval
 
         v = math.inf
 
         for child in node.children.values():
-            v = min(v, self.minimax_max(child, alpha, beta))
+            v = min(v, self.minimax_max(child, alpha, beta, quiescence))
 
             #Check if found the worst move for player
             if v <= alpha:
                 return v
             beta = min(beta, v)
         return v
+
+    def quiescence(self, node, alpha, beta, find_min = True):
+        """ 
+        For quiet results, extend the search to 1 more ply
+        on the node to look for danger
+        """
+        self.expand_minimax_tree(node, cutoff=1)
+        if find_min:
+            return self.minimax_min(node, alpha, beta, quiescence=True)
+        else:
+            return self.minimax_max(node, alpha, beta, quiescence=True)
 
     def update(self, colour, action):
         """
@@ -407,7 +438,7 @@ class Player:
                     h ^= ZOBRIST[i][j][self.white[(i,j)]-1]
         return h
 
-    def evaluate(self, weight = [10, 20, 3, 4, 10, 5]):
+    def evaluate(self, weight = [10, 20, 0, 0, 10, 5]):
         """
         Evaluates the leaf node's game state as advantageous for the player or
         Opponent
@@ -502,7 +533,7 @@ class Node:
 
             # children and actions: Only generated upon expanding
             self.children = None
-            self.eval = 0
+            self.eval = self.player.evaluate()
 
             # transposition table
             self.table = Counter()
@@ -557,9 +588,9 @@ class Node:
     def propagate_back(self):
         """Return the original node's action that resulted in this node"""
         root = self.parent
-        while root.parent.parent != None:
+        while root.parent != None:
             root = root.parent
-        return root.action_done
+        return root
 
 
 
