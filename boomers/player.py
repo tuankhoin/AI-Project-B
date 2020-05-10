@@ -74,10 +74,10 @@ class Player:
         tree_root = Node(self)
         blacks, whites = self.get_total_tokens()
         
-        # Middlegame
-        if (blacks==8 and whites<=8) or (blacks<=8 and whites==8):
+        # Middlegame: 2 sides only have a maximum of 9 tokens on each side
+        if (blacks==9 and whites<=9) or (blacks<=9 and whites==9):
             self.expand_minimax_tree(tree_root, cutoff=3)
-        # Endgame
+        # Endgame: Less than 2 tokens on each side
         elif blacks <=2 and whites <=2:
             self.expand_minimax_tree(tree_root, cutoff=5)
         # Opengame
@@ -400,7 +400,7 @@ class Player:
                     h ^= ZOBRIST[i][j][self.white[(i,j)]-1]
         return h
 
-    def evaluate(self, weight = [10, 20, 3, 2, 10]):
+    def evaluate(self, weight = [10, 20, 3, 4, 10, 5]):
         """
         Evaluates the leaf node's game state as advantageous for the player or
         Opponent
@@ -444,7 +444,7 @@ class Player:
         # "Keep your friends close, and your enemies closer."
         closest_enemy = 1/math.sqrt(self.closest())
 
-        """
+        
         # Cluster potentials
         cluster_chain = 0
         for cluster in self.get_clusters():
@@ -452,17 +452,24 @@ class Player:
                 for b in cluster[0]:
                     cluster_chain += self.black[b]
                 for w in cluster[1]:
-                    cluster_chain -= self.white[w] 
-                #print("Cluser's weight:", cluster_chain)
+                    cluster_chain -= self.white[w]
+            elif cluster[0] and not cluster[1] and self.true_color=='black':
+                for b in cluster[0]:
+                    cluster_chain -= self.black[b]
+            elif cluster[0] and not cluster[1] and self.true_color=='white':
+                for w in cluster[1]:
+                    cluster_chain += self.white[w]
+            #print("Cluser's weight:", cluster_chain)
         if self.true_color == 'white':
             cluster_chain *= -1
-        """
+        
 
         score = weight[0]*t_player      \
               - weight[1]*t_opponent    \
               + weight[2]*control       \
               + weight[3]*corner_stacks \
-              + weight[4]*closest_enemy
+              + weight[4]*closest_enemy \
+              + weight[5]*cluster_chain
         return score
 
 
