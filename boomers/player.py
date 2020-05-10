@@ -21,6 +21,10 @@ ZOBRIST = [[[random.randint(1,2**64 - 1) for i in range(24)]for j in range(8)]fo
 # History table using Zobrist Hashing, only use when need to detect cycles
 #history = Counter()
 
+# TDLeaf calculation elements
+best_leaf_rewards = []
+weight_vector = [10, 20, 0, 0, 10, 5]
+
 class Player:
     def __init__(self, colour):
         """
@@ -152,6 +156,9 @@ class Player:
                 alpha = best_score
                 best_action = child.action_done
 
+        # Add to TDLeaf rewards
+        best_leaf_rewards.append(math.tanh(alpha))
+
         return best_action
 
     def minimax_max(self, node, alpha, beta, quiescence = False):
@@ -237,6 +244,16 @@ class Player:
         else:
             return self.minimax_max(node, alpha, beta, quiescence=True)
 
+    def update_TDLeaf(self, rewards, weights):
+        """
+        Taking a vector of best leaf node's reward through each stages and a vector of weights,
+        update the new weight values using TDLeaf(Lambda)
+        """
+        # d_i = r_{i+1}-r_i
+        # dr/dw_j = (1 - r_i^2)*feature_j
+        # w_j = w_j....
+        pass
+
     def update(self, colour, action):
         """
         This method is called at the end of every turn (including your player’s 
@@ -262,6 +279,7 @@ class Player:
             self.update_boom(colour, action)
 
         self.turn += 1
+        #self.update_TDLeaf(best_leaf_rewards, weight_vector)
         #history[self.to_hash()] += 1
 
     def update_move(self, color, action):
