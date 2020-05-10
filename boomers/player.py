@@ -75,14 +75,14 @@ class Player:
         blacks, whites = self.get_total_tokens()
         
         # Middlegame
-        if blacks<7 and whites<7 and blacks>2 and whites>2:
-            self.expand_minimax_tree(tree_root, cutoff=3)
+        if (blacks==3 and whites<=3) or (blacks<=3 and whites==3):
+            self.expand_minimax_tree(tree_root, cutoff=4)
         # Endgame
         elif blacks <=2 and whites <=2:
-            self.expand_minimax_tree(tree_root, cutoff=4)
+            self.expand_minimax_tree(tree_root, cutoff=5)
         # Opengame
         else:
-            self.expand_minimax_tree(tree_root, cutoff=2)
+            self.expand_minimax_tree(tree_root, cutoff=3)
 
         #Find the best move based from minimax leaf nodes
         action = self.minimax_alpha_beta(tree_root)
@@ -128,6 +128,10 @@ class Player:
         beta = float('inf')
         best_action = None
 
+        # Handle hash collsions: Force expand, even for repeated values
+        if tree.children == {}:
+            tree.expand_all(True)
+
         #Start alpha-beta search and expansion
         for child in tree.children.values():
             best_score = self.minimax_min(child, alpha, beta)
@@ -157,14 +161,16 @@ class Player:
         if node.children == None:
             return node.eval
 
+        v = -math.inf
+
         for child in node.children.values():
-            alpha = max(alpha, self.minimax_min(child, alpha, beta))
+            v = max(v, self.minimax_min(child, alpha, beta))
 
             #Check if found a better move for player
-            if alpha >= beta:
-                return beta
-
-        return alpha
+            if v >= beta:
+                return v
+            alpha = max(alpha,v)
+        return v
 
     def minimax_min(self, node, alpha, beta):
         """
@@ -182,14 +188,16 @@ class Player:
         if node.children == None:
             return node.eval
 
+        v = math.inf
+
         for child in node.children.values():
-            beta = min(beta, self.minimax_max(child, alpha, beta))
+            v = min(v, self.minimax_max(child, alpha, beta))
 
             #Check if found the worst move for player
-            if beta <= alpha:
-                return alpha
-
-        return beta
+            if v <= alpha:
+                return v
+            beta = min(beta, v)
+        return v
 
     def update(self, colour, action):
         """
@@ -493,7 +501,7 @@ class Node:
         Black stacks: %s\n\
         White stacks: %s\n" % (self.action_done, self.depth, self.player.color, self.player.black, self.player.white)
 
-    def expand(self, color, action):
+    def expand(self, color, action, force = False):
         """Expand each action to a child node for use in minimax"""
         child = Node(None, False)
         child.player = deepcopy(self.player)
@@ -505,19 +513,19 @@ class Node:
         child.depth = self.depth + 1
         child.table = self.table
 
-        # Only append to tree if the new child does not repeat any state
+        # Only append to tree if the new child does not repeat any state, or it is forced
         child_hash_key = child.player.to_hash()
-        if not self.table[child_hash_key]:
+        if not self.table[child_hash_key] or force:
             self.children[action] = child
             self.table[child_hash_key] += 1
 
-    def expand_all(self):
+    def expand_all(self, force = False):
         """Expanding all available actions into children nodes for minimax"""
         self.children = {}
         actions = self.player.get_available_action(self.player.color == 'black')
 
         for action in actions:
-            self.expand(self.player.color,action)
+            self.expand(self.player.color,action,force)
 
     def propagate_back(self):
         """Return the original node's action that resulted in this node"""
