@@ -75,14 +75,14 @@ class Player:
         blacks, whites = self.get_total_tokens()
         
         # Middlegame
-        if (blacks==3 and whites<=3) or (blacks<=3 and whites==3):
-            self.expand_minimax_tree(tree_root, cutoff=4)
+        if (blacks==8 and whites<=8) or (blacks<=8 and whites==8):
+            self.expand_minimax_tree(tree_root, cutoff=3)
         # Endgame
         elif blacks <=2 and whites <=2:
             self.expand_minimax_tree(tree_root, cutoff=5)
         # Opengame
         else:
-            self.expand_minimax_tree(tree_root, cutoff=3)
+            self.expand_minimax_tree(tree_root, cutoff=2)
 
         #Find the best move based from minimax leaf nodes
         action = self.minimax_alpha_beta(tree_root)
@@ -369,6 +369,16 @@ class Player:
                         action_list.append(('MOVE', j, pos, (x,i)))
         return action_list
 
+    def closest(self):
+        """Returns the closest squared euclidean distance between 2 stacks of different colors"""
+        min_dist = math.inf
+        for x_b, y_b in self.black:
+            for x_w, y_w in self.white:
+                dist = (x_b-x_w)**2+(y_w-y_b)**2
+                if dist < min_dist:
+                    min_dist = dist
+        return min_dist
+
     def to_hash(self):
         """Returns the hash value of state to store in the transposition table
         Idea taken from Zobrist Hashing"""
@@ -390,7 +400,7 @@ class Player:
                     h ^= ZOBRIST[i][j][self.white[(i,j)]-1]
         return h
 
-    def evaluate(self, weight = [10, 10, 3, 2]):
+    def evaluate(self, weight = [10, 20, 3, 2, 10]):
         """
         Evaluates the leaf node's game state as advantageous for the player or
         Opponent
@@ -431,6 +441,9 @@ class Player:
             corner_stacks -= player_tokens[corner]
         #print("Corner:",corner_stacks)
 
+        # "Keep your friends close, and your enemies closer."
+        closest_enemy = 1/math.sqrt(self.closest())
+
         """
         # Cluster potentials
         cluster_chain = 0
@@ -449,7 +462,7 @@ class Player:
               - weight[1]*t_opponent    \
               + weight[2]*control       \
               + weight[3]*corner_stacks \
-              #+ weight[4]*cluster_chain
+              + weight[4]*closest_enemy
         return score
 
 
