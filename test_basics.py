@@ -1,11 +1,14 @@
 """Run this script to test the newly implemented functions"""
-from minimax_agent.player import ExamplePlayer as Player
-import utils.functionality as f
+from boomers.player import Player
 
 player = Player('white')
-available = f.get_available_action(player)
-clusters = f.get_clusters(player)
+#player.black[(2,4)] += 1
+print(player)
+
+available = player.get_available_action(False)
 print(*available, sep='\n')
+
+clusters = player.get_clusters()
 print(*clusters, sep='\n')
 
 boom = ('BOOM', (0,0))
@@ -15,20 +18,31 @@ move2=("MOVE", 2, (4,1), (4,3))
 move3=("MOVE", 1, (4,3), (4,5))
 boom4 = ('BOOM', (4,5))
 
-f.update_move(player, 'white', move1)
-f.update_move(player, 'white', move2)
-f.update_move(player, 'white', move3)
-
+player.update('white', move1)
 print(player)
 
-available = f.get_available_action(player)
-opponent = f.get_opponent_action(player)
+player.update('white', move2)
+print(player)
 
+player.update('white', move3)
+print(player)
+
+print(player.closest())
+
+available = player.get_available_action(False)
 print(*available, sep='\n')
-#print(*opponent,  sep='\n')
 
-f.update_boom(player, 'white', boom4)
+clusters = player.get_clusters()
+print(*clusters, sep='\n')
 
+#available = f.get_available_action(player)
+#print(*available, sep='\n')
+
+player.update('white', boom4)
 print(player)
 
+clusters = player.get_clusters()
+print(*clusters, sep='\n')
+
+print(player.evaluate())
 

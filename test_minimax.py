@@ -1,27 +1,28 @@
-from minimax_agent.player import ExamplePlayer as Player
-import heuristics.search as s
+from boomers.player import Player,Node
+import time
+from guppy import hpy
+from collections import Counter
 
-#Have a white token at (0,5), in front of a black token (0,6 )
-test_player_list = white = [[1,0,5], [1,1,1],   [1,3,1], [1,4,1],   [1,6,1], [1,7,1],
-         [1,0,0], [1,1,0],   [1,3,0], [1,4,0],   [1,6,0], [1,7,0]]
+h = hpy()
 
-#Default black set up
-black = [[1,0,7], [1,1,7],   [1,3,7], [1,4,7],   [1,6,7], [1,7,7],
-         [1,0,6], [1,1,6],   [1,3,6], [1,4,6],   [1,6,6], [1,7,6]]
+start = time.time()
+begin = h.heap()
 
+player = Player('black')
+player.white.update({(1,1):0, (3,1):0, (4,1):0, (2,1):1, (4,3):1, (4,5):1})
+player.black = Counter({(0, 7): 1, (1, 7): 1, (3, 7): 1, (4, 7): 1, (6, 7): 1, (7, 7): 1, (1, 6): 1, (6, 6): 1, (7, 6): 1, (0, 5): 1})
+player.white = Counter({(1, 1): 1, (6, 1): 1, (7, 1): 1, (0, 0): 1, (1, 0): 1, (3, 0): 1, (4, 0): 1, (6, 0): 1, (7, 0): 1, (0, 2): 1})
+player.black.update({(3,6):0, (4,6):0, (3,4):1, (3,2):1})
 
-#Create a player agent
-player = Player('white')
+tree_root = Node(player)
 
-player.init_minimax()
+player.expand_minimax_tree(tree_root, cutoff=2)
+print(len(tree_root.children))
 
-#Change custom board layout if needed
-# player.tree.update_node_state(test_player_list, black)
+#Find the best move based from minimax leaf nodes
+action = player.minimax_alpha_beta(tree_root)
 
-print("\nBEST MOVE: ", player.action())
-
-#Get all available actions
-# root.evaluate_actions()
-
-#Creat children for root node
-# root.expand_all()
+mem = h.heap()-begin
+print(action)
+print(mem)
+print("Operate time:",time.time()-start)
