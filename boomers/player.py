@@ -13,8 +13,8 @@ BOOM_RADIUS = [(-1,+1), (+0,+1), (+1,+1),
 
 ZOBRIST = [[[random.randint(1,2**64 - 1) for i in range(24)]for j in range(8)]for k in range(8)]
 
-# Transposition table using Zobrist Hashing
-history = Counter()
+# History table using Zobrist Hashing, only use when need to detect cycles
+#history = Counter()
 
 class Player:
     def __init__(self, colour):
@@ -34,7 +34,7 @@ class Player:
         
         # allocating correct state representation of player and opponent
         self.turn = 0
-        history.update({self.to_hash(): 1})
+        #history.update({self.to_hash(): 1})
         
     def __str__(self):
         return "\tPlayer color: %s\tTurn: %d\n \
@@ -74,12 +74,12 @@ class Player:
         tree_root = Node(self)
         blacks, whites = self.get_total_tokens()
         
-        # Middlegame: 2 sides only have a maximum of 9 tokens on each side
-        if (blacks==9 and whites<=9) or (blacks<=9 and whites==9):
+        # Middlegame: 2 sides only have a maximum of 8 tokens on each side
+        if (blacks==8 and whites<=8) or (blacks<=8 and whites==8):
             self.expand_minimax_tree(tree_root, cutoff=3)
         # Endgame: Less than 2 tokens on each side
         elif blacks <=2 and whites <=2:
-            self.expand_minimax_tree(tree_root, cutoff=5)
+            self.expand_minimax_tree(tree_root, cutoff=4)
         # Opengame
         else:
             self.expand_minimax_tree(tree_root, cutoff=2)
@@ -108,6 +108,9 @@ class Player:
 
         #Expand the parent node first
         node.expand_all()
+        # Handle hash collsions: Force expand, even for repeated values
+        if node.children == {}:
+            node.expand_all(True)
 
         #Expand each child for each node until cutoff reached
         for child in node.children.values():
@@ -127,10 +130,6 @@ class Player:
         alpha = float('-inf')
         beta = float('inf')
         best_action = None
-
-        # Handle hash collsions: Force expand, even for repeated values
-        if tree.children == {}:
-            tree.expand_all(True)
 
         #Start alpha-beta search and expansion
         for child in tree.children.values():
@@ -224,7 +223,7 @@ class Player:
             self.update_boom(colour, action)
 
         self.turn += 1
-        history[self.to_hash()] += 1
+        #history[self.to_hash()] += 1
 
     def update_move(self, color, action):
         """Updating the player status after a move action"""
@@ -499,7 +498,7 @@ class Node:
 
             # transposition table
             self.table = Counter()
-            self.table.update(history)
+            #self.table.update(history)
         else:
             self.player = None
             self.parent = None
