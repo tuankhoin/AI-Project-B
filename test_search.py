@@ -1,4 +1,4 @@
-"""Run this script to test the newly implemented functions"""
+"""Run this script to test the newly implemented Node class functions"""
 from boomers.player import Player,Node
 
 player = Player('white')

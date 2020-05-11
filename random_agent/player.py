@@ -1,5 +1,16 @@
 """
-This is the main script for random_agent, an agent that makes random available moves
+                        Expendibots AI Agent
+                     Testing random agent script
+        By Boomers - Tuan Khoi Nguyen (1025294) and Nicholas Wong (926736)
+                  Last modified by Tuan Khoi Nguyen
+
+
+This script contains:
+
+    * Player class and its functionalitites:
+        + Basic state and movement updates
+        + Implementation: Take an available random move from its available actions
+
 """
 import random
 from utils.functionality import get_available_action, update_move, update_boom

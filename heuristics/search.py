@@ -2,8 +2,27 @@
 NOTE: THIS IS THE OLD IMPLEMENTATION SCRIPT FOR BOOMERS.
       THE SCRIPTS ARE KEPT TO MAINTAIN THE random_agent PACKAGE
 """
-""" This is the collection package of search utilities and heuristic
-    functions to apply on agents that use heuristics """
+
+"""
+                        Expendibots AI Agent
+                      Search Utilities script
+        By Boomers - Tuan Khoi Nguyen (1025294) and Nicholas Wong (926736)
+                  Last modified by Tuan Khoi Nguyen
+
+This is the collection package of search utilities and heuristic functions to apply on agents that use heuristics.
+
+This script contains:
+
+    * Node class and its functionalitites:
+        + Basic state and movement representations 
+        + Null Move Search
+
+    * Cost and heuristics functionalities:
+        + Euclidean heuristics
+        + Manhattan Upgraded heuristics: Manhattan/Max_Range
+        + Direct cost: Token loss of player - Token loss of opponent
+
+"""
 import math
 from copy import deepcopy
 import utils.functionality as f

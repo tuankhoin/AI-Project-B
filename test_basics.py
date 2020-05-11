@@ -1,4 +1,4 @@
-"""Run this script to test the newly implemented functions"""
+"""Run this script to test the newly implemented basic functions"""
 from boomers.player import Player
 
 player = Player('white')

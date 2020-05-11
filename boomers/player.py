@@ -1,5 +1,22 @@
 """
-The main agent class of Boomers
+                        Expendibots AI Agent
+                        The main agent script
+        By Boomers - Tuan Khoi Nguyen (1025294) and Nicholas Wong (926736)
+                Last modified: May 11th by Tuan Khoi Nguyen
+
+
+This script contains:
+
+    * Player class and its functionalitites:
+        + Basic state and movement representations 
+        + Evaluation functions
+        + Minimax with alpha-beta pruning
+        + Quiescence Search
+        + Transposition table - Zobrist Hashing
+        + TDLeaf(Lambda)
+
+    * Node class for minimax tree and its functionalities
+
 """
 import random
 import math

@@ -1,3 +1,7 @@
+"""
+Test script to check for bugs in a minimax search,
+and retrieve memory usage using guppy
+"""
 from boomers.player import Player,Node
 import time
 from guppy import hpy

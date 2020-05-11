@@ -1,3 +1,18 @@
+"""
+                        Expendibots AI Agent
+                     Testing greedy agent script
+        By Boomers - Tuan Khoi Nguyen (1025294) and Nicholas Wong (926736)
+                  Last modified by Tuan Khoi Nguyen
+
+
+This script contains:
+
+    * Player class and its functionalitites:
+        + Basic state and movement updates
+        + Implementation of greedy search: take the immediate action
+         that causes the most token loss, with distance heuristics
+
+"""
 from utils.functionality import get_available_action, update_move, update_boom
 import heuristics.search as search
 from copy import deepcopy

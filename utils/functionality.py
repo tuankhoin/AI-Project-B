@@ -3,7 +3,21 @@ NOTE: THIS IS THE OLD IMPLEMENTATION SCRIPT FOR BOOMERS.
       THE SCRIPTS ARE KEPT TO MAINTAIN THE random_agent PACKAGE
 """
 
-""" The util package used to update and evaluate basic functionalities on a player """
+"""
+                        Expendibots AI Agent
+                       Player Utilities script
+        By Boomers - Tuan Khoi Nguyen (1025294) and Nicholas Wong (926736)
+                  Last modified by Tuan Khoi Nguyen
+
+The util package used to update and evaluate basic functionalities on a player.
+
+This script contains:
+
+    * Basic functions for Player class (old implementation):
+        + Basic movement updates (e.g. move, booming)
+        + State evaluations (e.g. Cluster grouping, valid move evaluation)
+
+"""
 
 def get_opponent_color(player):
     """Return a player's opponent color"""
