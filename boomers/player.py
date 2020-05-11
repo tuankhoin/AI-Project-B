@@ -194,7 +194,7 @@ class Player:
                 best_action = child.action_done
 
             # Time guard: instantly return the best current node if the search exceeds time
-            if (time.time()-start>57):
+            if (time.time()-start>55):
                 return best_action
 
         # Add to TDLeaf rewards when the recording turn starts
