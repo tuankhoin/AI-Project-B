@@ -3,6 +3,7 @@ The main agent class of Boomers
 """
 import random
 import math
+import numpy as np
 from collections import Counter
 from copy import deepcopy, copy
 
@@ -22,7 +23,11 @@ ZOBRIST = [[[random.randint(1,2**64 - 1) for i in range(24)]for j in range(8)]fo
 #history = Counter()
 
 # TDLeaf calculation elements
+LAMBDA = 0.1
+LEARNING_RATE = 0.1
 best_leaf_rewards = []
+temporal_difference = []
+lambdas = []
 weight_vector = [10, 20, 0, 0, 10, 5]
 
 class Player:
@@ -156,8 +161,9 @@ class Player:
                 alpha = best_score
                 best_action = child.action_done
 
-        # Add to TDLeaf rewards
-        best_leaf_rewards.append(math.tanh(alpha))
+        # Add to TDLeaf rewards when the recording turn starts
+        if self.turn > 5:
+            best_leaf_rewards.append(math.tanh(alpha))
 
         return best_action
 
@@ -249,12 +255,28 @@ class Player:
         Taking a vector of best leaf node's reward through each stages and a vector of weights,
         update the new weight values using TDLeaf(Lambda)
         """
-        # d_i = r_{i+1}-r_i
-        # dr/dw_j = (1 - r_i^2)*feature_j
-        # w_j = w_j....
-        pass
+        # Latest = N-1
+        latest = len(best_leaf_rewards) - 1
+        if latest == 0:
+            return
 
-    def update(self, colour, action):
+        # temporal_difference[n] = r[n+1]-r[n]
+        temporal_difference.append(best_leaf_rewards[latest]-best_leaf_rewards[latest-1])
+
+        # lambda[n] = Lambda**n
+        lambdas.append(LAMBDA**(latest-1))
+
+        # w_j = w_j....
+        total_adjust = 0
+        for w in weight_vector:
+            for i in range(latest):
+                # dr/dw_j = (1 - r_i^2)*feature_j
+                deriv = (1 - best_leaf_rewards[i]**2)
+                adjust = np.dot(lambdas[:latest-i], temporal_difference[i:])
+                total_adjust += deriv*adjust
+            w += LEARNING_RATE*total_adjust
+
+    def update(self, colour, action, tdl_update = True):
         """
         This method is called at the end of every turn (including your player’s 
         turns) to inform your player about the most recent action. You should 
@@ -279,7 +301,10 @@ class Player:
             self.update_boom(colour, action)
 
         self.turn += 1
-        #self.update_TDLeaf(best_leaf_rewards, weight_vector)
+
+        if self.turn > 6 and tdl_update and colour == self.color:
+            self.update_TDLeaf(best_leaf_rewards, weight_vector)
+
         #history[self.to_hash()] += 1
 
     def update_move(self, color, action):
@@ -582,7 +607,7 @@ class Node:
         child = Node(None, False)
         child.player = deepcopy(self.player)
 
-        child.player.update(color, action)
+        child.player.update(color, action, False)
         child.player.color = self.player.get_opponent_color()
         child.parent = self
         child.action_done = action
