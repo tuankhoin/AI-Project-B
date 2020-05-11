@@ -20,6 +20,7 @@ This script contains:
 """
 import random
 import math
+import time
 import numpy as np
 from collections import Counter
 from copy import deepcopy, copy
@@ -179,6 +180,7 @@ class Player:
         alpha = float('-inf')
         beta = float('inf')
         best_action = None
+        start = time.time()
 
         #Start alpha-beta search and expansion
         for child in tree.children.values():
@@ -190,6 +192,10 @@ class Player:
             if best_score > alpha:
                 alpha = best_score
                 best_action = child.action_done
+
+            # Time guard: instantly return the best current node if the search exceeds time
+            if (time.time()-start>57):
+                return best_action
 
         # Add to TDLeaf rewards when the recording turn starts
         if self.turn > 5:
