@@ -267,8 +267,8 @@ class Player:
         lambdas.append(LAMBDA**(latest-1))
 
         # w_j = w_j....
-        total_adjust = 0
         for w in weight_vector:
+            total_adjust = 0
             for i in range(latest):
                 # dr/dw_j = (1 - r_i^2)*feature_j
                 deriv = (1 - best_leaf_rewards[i]**2)
@@ -302,6 +302,10 @@ class Player:
 
         self.turn += 1
 
+        # Only do TDLeaf when :
+        # + The recording turn starts
+        # + The update is used on a real player, not for node search
+        # + Updated move is from the player
         if self.turn > 6 and tdl_update and colour == self.color:
             self.update_TDLeaf(best_leaf_rewards, weight_vector)
 
