@@ -29,6 +29,7 @@ best_leaf_rewards = []
 temporal_difference = []
 lambdas = []
 weight_vector = [10, 20, 0, 0, 10, 5]
+feature_values = [0, 0, 0, 0, 0, 0]
 
 class Player:
     def __init__(self, colour):
@@ -267,14 +268,14 @@ class Player:
         lambdas.append(LAMBDA**(latest-1))
 
         # w_j = w_j....
-        for w in weight_vector:
+        for w in range(len(weight_vector)):
             total_adjust = 0
             for i in range(latest):
                 # dr/dw_j = (1 - r_i^2)*feature_j
                 deriv = (1 - best_leaf_rewards[i]**2)
                 adjust = np.dot(lambdas[:latest-i], temporal_difference[i:])
-                total_adjust += deriv*adjust
-            w += LEARNING_RATE*total_adjust
+                total_adjust += deriv*adjust*feature_values[w]
+            weight_vector[w] += LEARNING_RATE*total_adjust
 
     def update(self, colour, action, tdl_update = True):
         """
@@ -485,7 +486,7 @@ class Player:
                     h ^= ZOBRIST[i][j][self.white[(i,j)]-1]
         return h
 
-    def evaluate(self, weight = [10, 20, 0, 0, 10, 5]):
+    def evaluate(self, weight = [10, 20, 0, 0, 10, 5], update_feature = False):
         """
         Evaluates the leaf node's game state as advantageous for the player or
         Opponent
@@ -548,6 +549,13 @@ class Player:
         if self.true_color == 'white':
             cluster_chain *= -1
         
+        if update_feature:
+            feature_values[0] = t_player
+            feature_values[1] = t_opponent    
+            feature_values[2] = control       
+            feature_values[3] = corner_stacks 
+            feature_values[4] = closest_enemy 
+            feature_values[5] = cluster_chain
 
         score = weight[0]*t_player      \
               - weight[1]*t_opponent    \
@@ -580,7 +588,7 @@ class Node:
 
             # children and actions: Only generated upon expanding
             self.children = None
-            self.eval = self.player.evaluate()
+            self.eval = self.player.evaluate(weight=weight_vector, update_feature = True)
 
             # transposition table
             self.table = Counter()
