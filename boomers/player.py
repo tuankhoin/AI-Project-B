@@ -7,6 +7,7 @@ import numpy as np
 from collections import Counter
 from copy import deepcopy, copy
 
+# Constant defining
 CONTROL_AREA = [(x,y) for x in range(1,7) for y in range(3,5)]
 
 CORNER_AREA = [(x,y) for x in [0,1,6,7] for y in [0,1,6,7]]
@@ -17,17 +18,24 @@ BOOM_RADIUS = [(-1,+1), (+0,+1), (+1,+1),
 
 QUIET_THRESHOLD = 0.25
 
+# Zobrist table, where the keys are generated for each unique state
 ZOBRIST = [[[random.randint(1,2**64 - 1) for i in range(24)]for j in range(8)]for k in range(8)]
 
 # History table using Zobrist Hashing, only use when need to detect cycles
 #history = Counter()
 
 # TDLeaf calculation elements
+
+# Lambda is set to make eval() more realistic
 LAMBDA = 0.1
 LEARNING_RATE = 0.1
+
+# Value arrays for fast access when training
 best_leaf_rewards = []
 temporal_difference = []
 lambdas = []
+
+# Each weight vector element w(s) is used with its concurrent feature_values f(s) element
 weight_vector = [10, 20, 0, 0, 10, 5]
 feature_values = [0, 0, 0, 0, 0, 0]
 
@@ -90,6 +98,10 @@ class Player:
         return self.get_action()
 
     def get_action(self):
+        """
+        Use minimax, find the perfect move to operate
+        Different stages use different depths to save time and space
+        """
         #Expand the minimax tree
         tree_root = Node(self)
         blacks, whites = self.get_total_tokens()
@@ -174,8 +186,9 @@ class Player:
 
         @params:
         node: a Node object
-        alpha, an int, representing the best value the algorithm has found
-        beta, an int, representing the worst play's evaluation score
+        alpha: an int, representing the best value the algorithm has found
+        beta: an int, representing the worst play's evaluation score
+        quiescence: boolean indicates that if this is an expanded search of quiescence search
 
         Returns an int, score of the leaf node
         """
@@ -210,8 +223,9 @@ class Player:
 
         @params:
         node: a Node object
-        alpha, an int, representing the best value the algorithm has found
-        beta, an int, representing the worst play's evaluation score
+        alpha: an int, representing the best value the algorithm has found
+        beta: an int, representing the worst play's evaluation score
+        quiescence: boolean indicates that if this is an expanded search of quiescence search
 
         Returns an int, score of the leaf node
         """
@@ -243,7 +257,10 @@ class Player:
     def quiescence(self, node, alpha, beta, find_min = True):
         """ 
         For quiet results, extend the search to 1 more ply
-        on the node to look for danger
+        on the node to look for danger.
+
+        Argument find_min indicates that if the current node is on 
+        the min or max level of minimax tree.
         """
         self.expand_minimax_tree(node, cutoff=1)
         if find_min:
@@ -254,7 +271,7 @@ class Player:
     def update_TDLeaf(self, rewards, weights):
         """
         Taking a vector of best leaf node's reward through each stages and a vector of weights,
-        update the new weight values using TDLeaf(Lambda)
+        update the new weight values using TDLeaf(Lambda).
         """
         # Latest = N-1
         latest = len(best_leaf_rewards) - 1
@@ -267,7 +284,7 @@ class Player:
         # lambda[n] = Lambda**n
         lambdas.append(LAMBDA**(latest-1))
 
-        # w_j = w_j....
+        # Update each new weight
         for w in range(len(weight_vector)):
             total_adjust = 0
             for i in range(latest):
@@ -290,6 +307,9 @@ class Player:
 
         The parameter action is a representation of the most recent action
         conforming to the spec's instructions for representing actions.
+
+        The parameter tdl_update will check if this function is used on a real
+        player and decide wether to do a TDLeaf update or not.
 
         You may assume that action will always correspond to an allowed action 
         for the player colour (your method does not need to validate the action
@@ -418,8 +438,11 @@ class Player:
             return None
 
     def get_available_action(self, is_black=True):
-        """Returns a list that contains the available moves of a color, black by default \n
-        Put False to argument to get action of whites"""
+        """
+        Returns a list that contains the available moves of a color, black by default.
+
+        Put False to argument to get action of whites.
+        """
         action_list = []
         if is_black:
             player_list = self.black
@@ -466,8 +489,10 @@ class Player:
         return min_dist
 
     def to_hash(self):
-        """Returns the hash value of state to store in the transposition table
-        Idea taken from Zobrist Hashing"""
+        """
+        Returns the hash value of state to store in the transposition table.
+        Underlying method is Zobrist Hashing.
+        """
 
         # Tuple hashing method to compare
         #return (
@@ -489,7 +514,7 @@ class Player:
     def evaluate(self, weight = [10, 20, 0, 0, 10, 5], update_feature = False):
         """
         Evaluates the leaf node's game state as advantageous for the player or
-        Opponent
+        Opponent.
 
         (+): Advantegous for player \n
         (-): Advantageous for opponent
@@ -549,6 +574,7 @@ class Player:
         if self.true_color == 'white':
             cluster_chain *= -1
         
+        # If a TDLeaf update is needed as well:
         if update_feature:
             feature_values[0] = t_player
             feature_values[1] = t_opponent    
