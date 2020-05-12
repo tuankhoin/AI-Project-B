@@ -3,3 +3,4 @@ __pycache__/
 utils/__pycache__/functionality.cpython-36.pyc
 *.pyc
 utils/__pycache__/functionality.cpython-36.pyc
+.vscode/

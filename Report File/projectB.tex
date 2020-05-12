@@ -1,0 +1,328 @@
+\documentclass[]{article}
+\usepackage[top=2cm,bottom=2cm,left=2.2cm,right=2.2cm]{geometry}
+\usepackage{tikz}
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+
+% for easy game-renaming
+\newcommand{\gameName}{Expendibots}
+
+
+\renewcommand{\abstractname}{}
+
+\title{
+{\small\sc
+    The University of Melbourne\\
+    COMP30024 Artificial Intelligence\\[1.5ex]
+}
+{\LARGE 
+    Project Part B:\\[1ex]
+}
+{\Huge\bf
+    Playing the Game
+}
+}
+\author{Boomers: Tuan Khoi Nguyen - 1025294, Nicholas Wong - 926736}
+
+\begin{document}
+\maketitle
+ 
+\section*{Overview}
+
+A warm welcome! This is the report for Project B, which goal is to create an invincible agent to be run on the game of \emph{\gameName}. In this report, we, the \emph{Boomers}, will briefly demonstrate the process of creating the agent and, find the path to destroy all opponent's stacks.
+
+\section{Search Formulation}
+
+\emph{\gameName} is a deterministic game of perfect information, where all the state representation are provided. It can be represented as a search problem:
+
+\subsection{Initial state}
+
+Initial state is given by the standard beginning of \emph{\gameName} for each side: 12 single token stacks, divided into 3 groups of 4 stacks. For the implementation, these stacks will be read into two collections of stacks in the from of \texttt{Counter[(x, y)] = n} - a stack of \texttt{n} tokens on \texttt{(x,y)}. Each list will represent either black or white stacks on a board, and therefore provides full information for each state representation of the game.
+
+\subsection{Actions}
+The actions involve:
+\begin{itemize}
+    \item Moving a number of token in 4 directions: \texttt{left, right, up, down} within the range, given by the stack's number of tokens. Moving into a space occupied with black tokens is not allowed.
+    \item Blowing up the stack: \texttt{boom}, triggering adjacent stacks to blow up and creating a chain reaction.
+\end{itemize}
+Applying one of the available moves will update the state into resulting state.
+
+\subsection{Terminal test}
+
+The terminal test for \emph{\gameName} is the same as chess, having 3 possible outcomes: Winning, Drawing and Losing.
+
+\subsection{Utility function}
+
+With the terminal test above, \emph{\gameName}'s function is a zero-sum game, and therefore the utility function will have these outcomes:
+
+\begin{itemize}
+    \item Winning: +1
+    \item Drawing: +0
+    \item Losing: -1
+\end{itemize}
+
+\section{Choice of strategy}
+
+For a standard one-on-one game of \emph{\gameName}, each token has a maximum of 5 moves, and for a board of 12 tokens, up to 60 moves are available for each turn. With an allowance of 60 seconds and 100MB each turn. With the constraints in resource usage, development needs to come up with a strategy that can be effective within the expansion limits.
+
+\subsection{Strategy planning \texttt{<boomers.player.get\_action()>}}
+
+With the limited allowance of expanded nodes, if full evaluation is made for up to 60 available moves, it would only able to reach around a 2 to 3-ply level. Therefore, for different cases of moves, different approaching methods should be implemented, to provide effectiveness on the agent. By researching on a variety of websites on chess programming, many methods are considered and applied to the strategy forming of \emph{Boomers}. \\
+
+A common rule in chess programming is that the game is divided into 3 different stages and applying different strategies to each one: The Opening, the Middlegame and the Endgame \cite{phase}. As a similar deterministic zero-sum game of perfect information like chess, it is true that each stage of \emph{\gameName} should require different approaches.
+
+\subsubsection{Opening}
+
+The opening has many available moves, and implementing advanced search on the beginning might be too excessive and unnecessary for development. In chess, there is already an open book for the opening moves, and chess programming is implemented with a system of database to fast search through the open book \cite{open, book}. As the time for development is limited, a safe opening strategy for the agent is evaluated, and then hard-coded to save up time while maintaining good development for the first steps, then maintain search at a low depth until middle game.\\
+
+In \emph{\gameName}, opening ends when both sides have less than 9 tokens, and moves to the middlegame stage.
+
+\subsubsection{Middlegame}
+
+The middle game is where the actions are well evaluated in chess, such as the perfect time for castling or detecting pawn rams \cite{mid}. Similar to chess, \emph{\gameName} has a lot of potential decisions to consider for defense and attack. With the use of minimax search to a larger depth, a small number of impact factors of game states have more influence to the evaluation of \emph{Boomers}, such as:
+\begin{itemize}
+    \item Potential splits that can be connected and destroy consecutive opponent's stacks
+    \item Avoiding dangerous spaces that may result in friendly-fire
+    \item Encourage center control and avoid corners
+\end{itemize}
+
+In \emph{\gameName}, middlegame starts after a game opening, and ends when both sides have less than 3 tokens. Then the final stage, endgame is reached.
+
+\subsubsection{Endgame}
+
+The endgame in chess games requires a lot of changes in strategy and implementation to reach a checkmate \cite{end}. In \emph{\gameName}, the strategy is different from chess. \emph{\gameName} is only limited in the given tokens, while chess can have sudden situation changes such as queening a pawn. But regarding of this, it still needs to reach to a high ply search to be able to win the game. \\
+
+While an evaluation function changes a lot in chess going from middlegame to endgame \cite{phase}, \emph{\gameName} requires fewer changes to be able to bound the necessary factors, and therefore an underlying temporal difference learning is suitable to update these changes. At this stage, transposition table becomes very useful, the same way it is applied in chess: to skip evaluating repeated nodes \cite{table}.
+
+\section{Choices and algorithms}
+
+With self-playing, self-evaluation and further research, a number of methods and algorithms are found to be suitable to improve the agent's usage and performance:
+
+\subsection{Representation data structure \texttt{<boomers.player>}}
+
+The agent implementation has two main classes to operate:
+
+\subsubsection{State representation \texttt{<boomers.player.Player>}}
+
+\texttt{Player} represents the board state's information. The mutable attributes of the class consists of 2 \texttt{collections.Counter} to store the number of tokens of each color in a square.\\
+
+Initially these values were defined as 2 lists of stacks in the form of \texttt{[n\_tokens, x\_coordinate, y\_coordinate]}. However, noting that to access each location will have to take at most O(n) time to search through the list, the implementation is changed to \texttt{collections.Counter} to reduce the access time to O(1).
+
+\subsubsection{Search tree node \texttt{<boomers.player.Node>}}
+
+\texttt{Node} is used as the element of the minimax search tree. The mutable attributes of the class consists of pointers to the children nodes and parent node, a \texttt{Player} to represent the desired state, and a shared transposition table of type \texttt{collections.Counter} with its parents and children to look for repeated nodes.\\
+
+\subsection{Opening moves \texttt{<boomers.player.Player.action()>}}
+To save up time on evaluating nodes, chess engines use the open book system to look for initial moves. Being a newly customized game with limited time, \emph{\gameName}
+is not yet to be developed in the means of strategy, and therefore such database for the opening moves of \emph{\gameName} is not available yet. To save up time, a hard-coded strategy is implemented for the initial moves.\\
+
+The moves include combining 2 stacks from the upper middle cluster into 1 and do fast jumps to approach the opponent's middle stacks. Most counter cases will result in a 1-on-1 trade, and a successful route can destroy up to 4 stack of the opponent using only 1 token. Step-by step includes:
+
+\begin{enumerate}
+    \item Combining 2 upper middle stacks into 1
+    \item Jump the combined stack up 2 tiles
+    \item Jump 1 token from the combined stack up to 2 tiles if applicable, otherwise start the search using other algorithms
+    \item Start the search using other algorithms
+\end{enumerate}
+
+\subsection{Evaluation function \texttt{<boomers.player.Player.evaluate()>}}
+
+The evaluation applies the philosophy from modern chess engines: Keep the evaluation simple to make the system bug-free and more maintainable \cite{eval}. With that in mind, let n be the number of token stacks on board, the function includes:
+
+\begin{itemize}
+    \item The total number of tokens of each side: O(n) iterating through each stack.
+    \begin{itemize}
+        \item Returns an infinite value if win/loss state is detected from this.
+    \end{itemize}
+    \item Bonus reward for stacks taking control of the board center ($x\in[1,6], y\in[3,4]$) and penalties for stacks lingering in the 4 corner tiles of 4 directions. Calculating these will iterate through $6\times2+4\times4=28$ tiles to look for stacks.
+    \item Closest distance between 2 stacks of different colors: $O(n^2)$ for 2 iteration loops to compare each pair of stacks on 2 sides.
+    \item The token number of each color on a shared cluster, and of player's color on its one-sided clusters:
+    \begin{itemize}
+        \item Clustering stacks: $O(n)$ in total for consecutive recursive calls of each clustered stack.
+        \item Detecting all different clusters: $O(n^2)$ for 2 loops iterating through each stack and cluster
+    \end{itemize}
+\end{itemize}
+
+Therefore, in total, each evaluation will take $O(n^2)$ time.
+
+\subsection{Minimax \texttt{<boomers.player.Player.expand\_minimax\_tree()>}}
+
+As from the Week 4 lecture, the minimax algorithm is a good choice for deterministic games with perfect information, in which \emph{\gameName} is classified in. It focuses on minimizing the opponent's desirability and maximizing the player's outcome, and so all possible moves are examined using an evaluation function. Step-by-step and recursively, it propagates up the tree level and returns the best move possible. The deeper the depth, the more efficient minimax works.\\
+
+However, the branching factor for minimax in \emph{\gameName} is very large. With a maximum branching of up to 5 moves per token, a standard \emph{\gameName} can be available of up to 60 moves, and therefore more likely to average the branching factor to around 25 to 45 moves. Assuming the average branching factor to be 30, both space and time complexity can go up to $O(b^m)$, that is $O(30^{max\_depth})$. With the usage constraints, this branching factor will only be able to expand to less than 3-ply using the standard minimax. This is where $\alpha-\beta$ pruning comes to save the day.
+
+\subsection{$\alpha-\beta$ pruning \texttt{<boomers.player.Player.minimax\_alpha\_beta()>}}
+
+$\alpha-\beta$ pruning is the improvement to the traditional minimax algorithm. It works by setting bound values $\alpha,\beta$: the upper and lower bound. If a node is found to be definitely worse for the player by comparing its bound to the current bound, it will not be examined, reducing the resource usage for the search. \\
+
+On average the $\alpha-\beta$ pruning can reduce the time and space complexity of up to $O(b^{\frac{3}{4}m})$. With a good ordering that makes the best moves to be expanded first, the complexities can even be reduced to $O(b^{\frac{m}{2}})$. Therefore, using $\alpha-\beta$ pruning, the search can go as deep as 4-ply to 6-ply, playing a decently good game in comparison to a standard player.
+
+\subsection{Boomers' Inverted Quiescence Search \texttt{<boomers.player.Player.quiescence()>}}
+
+In game playing search exists a problem called Horizon Effect: A move might be a good choice in the cutoff depth, but will lead to a bad result that is not detected because of the search's depth limit \cite{horizon}. This effect can be found right in the greedy search's downside: It only looks for an instant good move without knowing if it is a trap. Quiescence search solves this problem, by detecting moves that may cause sudden swings and expand them, and only terminate when all expanded nodes have reached a "quiet position" \cite{aima}. For example in chess, the "king in check" positions are further searched to avoid future harming.\\
+
+Unlike chess that involves with many potential traps, \emph{\gameName}'s board is more direct: as long as a stack keep its distance, it will be safe from being boomed. Furthermore, cluster checking is already implemented in the evaluation function, making detecting traps no longer necessary. Therefore, the idea of a modified variation of quiescence is came up, and implemented to empower \emph{Boomers}' strategy:
+
+\begin{itemize}
+    \item While the original quiescence searches on the danger moves to detect potential traps \cite{aima}, the modified quiescence will pick "quiet nodes" to search on instead - leaf nodes that does not make much difference to the original state. This will make these child nodes continue to develop their strategy fully like its "unquiet" siblings, to find a better solution, such as approaching to opponent's cluster.
+    \item The terminal condition of the original quiescence is when the child's value reaches close to the "quiet state" \cite{aima}. For the modified version, it is the other way around: the node's terminal condition is when it detects a sudden change, such as a big boom or being gang-boomed.
+    \item The method to detect if a node is quiet or not, depends on the implementation of each individual. For \emph{Boomers}, the node is considered an unquiet node if the difference between its state evaluation and the original state evaluation exceeds the \texttt{QUIET\_THRESHOLD}, a limit parameter. For \emph{Boomers}'s \emph{\gameName} agent, this value is 0.25 by default.
+    \item To save up time and usage, a simplified version of this method can be used. That is, from the quiet node, start a new minimax search tree to a limited depth and return its newfound value resulted on that tree. This version is also implemented in \emph{Boomers}'s \emph{\gameName} agent.
+\end{itemize}
+
+The worst case for the quiescence search depends on how deep the nodes are expanded. For an expansion limit of n, in the worse case it can make the tree complexity expand up to $O(b^{m+n})$, which happens if all leaf nodes satisfy the quiet condition and get expanded. This usually occurs when same states are repeated and the search algorithm denotes the state as a quiet state. Therefore, the best companion to go with this method, is a transposition table to eliminate the repeating states. 
+
+\subsection{Transposition table and Zobrist hashing\\ \texttt{<boomers.player.Player.to\_hash()>,<boomers.player.Node.table>}}
+
+As mentioned in the game ending, transposition table is a vital factor to cut down the state repetition, and can dramatically double the reachable depth of search \cite{aima}. The table keeps track of  the expanded moves in the tree, or player's action history \cite{end, table}. However, the process of storing the table and retrieve a state's hash key is also a considerable factor, especially in a game with many squares \cite{table}. \emph{\gameName} has the same dimension as chess, and similar states can be occurred very frequently, especially observed in the effect of detonating any one of the stacks in a cluster will always clean out the same cluster.\\
+
+Zobrist hashing creates a pseudorandom 64-bit number for each space and each type of token stacks on the board, and uses XOR operation to retrieve the hash key \cite{hash}. For a game of \emph{\gameName}, the number of array element is $n_{color} \times n_{max\_stack} \times height \times width$, that is $2 \times 12 \times 8 \times 8 = 1536$ values. To test its efficiency in \emph{\gameName}, the method is brought into comparison with using tuple of sorted coordinate tuples as the hash key. The former takes half of the time the tuple method needed to finish the search (\texttt{2.475s/4.533s}). Being the faster option, Zobrist hashing is chosen as the key retrieval method for the transposition table of \emph{Boomers}.\\
+
+The transposition in \emph{Boomers} is implemented as a \texttt{collections.Counter} to make the hash retrieval process takes constant O(1) time. To find the key for each state, all board squares will be iterated through, making each key retrieval takes constant $8\times8=64$ operations.
+
+
+\subsection{TDLeaf($\lambda$) \texttt{<boomers.player.Player.update\_TDLeaf()>}}
+
+As introduced in Week 5, TDLeaf($\lambda$) is a temporal difference machine learning implementation for game playing, by updating the weight after each turn. The algorithm is chosen to operate concurrently with the state update for its simplicity, using less computation and external connection, given that the set up is already done by the environment itself \cite{aima}. To better evaluate the state representation, numpy is used to operate calculations during training. For \emph{Boomers}, $\lambda$ is set to 0.1 to make the evaluation function more realistic, while the Learning Rate $\eta$ is set to 0.1 as a safe choice.\\
+
+Applying chain rule:
+\[
+\frac{\partial r}{\partial w_j} 
+= \frac{\partial eval}{\partial w_j}\times\frac{\partial eval}{\partial r} 
+= [1-tanh^2(eval(s^l_i,w))]\frac{\partial eval}{\partial w_j} 
+= (1-r^2_i)f_j(s)
+\]
+
+And converting the coefficient to matrices:
+\[
+\displaystyle\sum_{m=i}^{N-1} \lambda^{m-i}d_m = 
+\begin{bmatrix}
+       \lambda^0 & \lambda^1 & \dots & \lambda^{N-1-i}    
+\end{bmatrix}
+\begin{bmatrix}
+       d_i \\ d_{i+1} \\ \vdots \\ d_{N-1}    
+\end{bmatrix}
+\]
+
+The weight update function becomes:
+\[
+w_j \gets w_j + \eta \times f_j(s) \times \displaystyle\sum_{i=1}^{N-1}
+\begin{bmatrix}
+       \lambda^0 & \lambda^1 & \dots & \lambda^{N-1-i}    
+\end{bmatrix}
+\begin{bmatrix}
+       d_i \\ d_{i+1} \\ \vdots \\ d_{N-1}    
+\end{bmatrix}
+\times (1-r^2_i)
+\]
+
+The rest will then be implemented using Python's built-in loops and numpy's matrix functions.
+
+\section{Potential extensions and past ideas}
+
+Here lies the ideas that have been evaluated, or implemented, but have been put down or removed due to limited development time, or no longer being efficient to \emph{Boomers}.
+
+\subsection{Null-Move Heuristics \texttt{<heuristics.search.Node.null\_move\_search()>}}
+
+Being an estimator of how desirable a node may expand, the Null-Move will assume that the player returns a null move, or in other words, passing the turn to the opponent without making any move. The minimax search will run on this case with a limited depth and keep track of the nodes that produce cut-offs. Going back to the standard minimax search, the nodes with the concurrent actions to the saved nodes will be expanded first \cite{null}.\\
+
+With a null-move search to 2-ply, it would take up $O(b^2)$ for space and time. Using this effectively makes the minimax search complexity reduced to $O(b^\frac{m}{2})$. The total complexity will then be reduced to $O(b^\frac{m}{2})$ for search trees with a maximum depth greater than 2.\\
+
+This method was coded and put in the old implementation. However, with the use of quiescence search, simple implementation of null-move search is unnecessary, as the agent's maximum depth of search are now mostly relatively small (2 for opening), making it no longer useful for time reduction, and might end up taking the same time to sort the child nodes.
+
+\subsection{Tapered Eval}
+
+Tapered Eval is an evaluation function that is used to avoid sharp differences between phases \cite{tapered}. It evaluates using interpolation on the different phases.\\
+
+The use of Tapered Eval can help simplify the evaluation function, making the trade between simplicity and time complexity more efficient \cite{eval}. However, it requires that both evaluation for different phases be concurrently calculated, and require a lot of small elements retrieval to be able to make up the efficient interpolation, observed from Pettersson's framework \cite{tapered}. With limited time for development, the method may not work perfectly if little time is spent on, and therefore will be looked up to again when there is more space for improvement.
+
+\subsection{History transposition table \texttt{<boomers.player.history>}}
+
+Based on the idea of transposition table for the search tree, a history table using Zobrist Hashing was also created, with the purpose of avoiding movement cycles, and further reduce the excessive node expansion. However, noting that most states in \emph{\gameName} can never go back (such as booming), storing these would not make much difference, hence ineffective. A proposal idea to this is to develop a checking method that detects moves that can hardly go back (definitely appending all boom moves in), and not appending it to the history table to save up usage. More research is needed to make the most out of this table.
+
+\newpage
+\section{Testing and results}
+
+\subsection{Testing agents \texttt{<random\_agent>,<greedy\_agent>}}
+To test the efficiency the agent, 2 player modules are created: a \texttt{random\_agent} that picks a random available move and a \texttt{greedy\_agent} that takes on the move that gives the best immediate outcome based on the number of boomed tokens and closest Euclidean Distance:
+\begin{itemize}
+    \item \emph{Boomers} is able to defeat \texttt{random\_agent} from 5 moves to around 15 moves.
+    \item \emph{Boomers} is able to defeat \texttt{greedy\_agent} at around 30 moves.
+\end{itemize}
+
+\subsection{Test Scripts \texttt{<test\_minimax.py>,<test\_search.py>,<test\_basics.py>}}
+Test scripts are also used to check if the functions run smoothly, with measurement packages such as \texttt{time} or \texttt{guppy}. From the test scripts, the results indicates that:
+
+\begin{itemize}
+    \item For a \emph{Boomers} agent with the minimax cutoff depth of 2, it takes around 2 to 5 seconds to return an action, using around or less than 10 Megabytes of memory.
+    \item For a \emph{Boomers} agent with the minimax cutoff depth of 3, it takes around 35 to 50 seconds to return an action, using around 105 Megabytes of memory.
+\end{itemize}
+
+\section*{Overall}
+\textbf{At the end of the day, over 1500 lines of code in total are spanned for this project. Despite the effort, there is definitely more that still can be improved and \emph{Boomers} is not at its best, but we are proud that this is our original work and research. With more space for development, the \emph{Boomers} will definitely flourish its best in the future.}
+
+\newpage
+\begin{thebibliography}{}
+
+\bibitem{aima}
+Russell, Stuart J. Norvig, Peter.\\
+\textit{Artificial Intelligence: A Modern Approach (3rd. edition)}. \\
+Upper Saddle River, New Jersey: Prentice Hall, 2009.
+
+\bibitem{phase} 
+Phases of a Chess Game,
+\\\texttt{https://www.mark-weeks.com/aboutcom/ble24phs.htm}.
+
+\bibitem{open} 
+Opening - Chessprogramming wiki,
+\\\texttt{https://www.chessprogramming.org/Opening}.
+
+\bibitem{mid} 
+Middlegame - Chessprogramming wiki,
+\\\texttt{https://www.chessprogramming.org/Middlegame}.
+
+\bibitem{end} 
+Endgame - Chessprogramming wiki,
+\\\texttt{https://www.chessprogramming.org/Endgame}.
+
+\bibitem{eval} 
+Evaluation Philosophy - Chessprogramming wiki,
+\\\texttt{https://www.chessprogramming.org/Evaluation\_Philosophy}.
+
+\bibitem{qui} 
+Quiscience Search - Chessprogramming wiki,
+\\\texttt{https://www.chessprogramming.org/Quiescence\_Search}.
+
+\bibitem{horizon} 
+Horizon Effect - Oxford Reference,
+\\\texttt{https://www.oxfordreference.com/view/10.1093/oi/authority.20110803095944934}.
+
+\bibitem{null} 
+Question On Null Move Pruning,
+\\\texttt{http://www.talkchess.com/forum3/viewtopic.php?t=65024}. 
+
+\bibitem{null-wiki} 
+Null Move Heuristic - Wikipedia,
+\\\texttt{en.wikipedia.org/wiki/Null-move\_heuristic}.
+
+\bibitem{book} 
+Chess Openings and Book Moves - chess.com,
+\\\texttt{https://www.chess.com/openings}.
+
+\bibitem{table} 
+Transposition Table and Zobrist Hashing - Adam Berent,
+\\\texttt{https://adamberent.com/2019/03/02/transposition-table-and-zobrist-hashing/}.
+
+\bibitem{hash} 
+Minimax Algorithm in Game Theory | Set 5 (Zobrist Hashing) - GeeksforGeeks,
+\\\texttt{https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-5-zobrist-hashing/}.
+
+\bibitem{tapered} 
+Mediocre Chess: [Guide] Tapered Eval,
+\\\texttt{http://mediocrechess.blogspot.com/2011/10/guide-tapered-eval.html}.
+\end{thebibliography}
+
+\end{document}
