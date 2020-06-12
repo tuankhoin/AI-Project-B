@@ -1,6 +1,6 @@
 # COMP30024 Project B: Expendibots by Boomers
 
-This is the main repository to Project B of COMP30024, Semester 1 2020.
+This is the main repository to Project B of [COMP30024, Semester 1 2020](https://handbook.unimelb.edu.au/2020/subjects/comp30024).
 
 ## Author
 
@@ -37,7 +37,31 @@ Our full strategy evaluation can be found in [the project report](https://github
 
 As mentioned above, this package serves as the main project to The University of Melbourne's COMP30024 - Artificial Intelligence, a 3rd year Subject.
 
-Despite the fact that Khoi was only a 2nd year student at the time, the Boomers had received a high score, with almost full marks for the creativity (strategy) part, which very few groups was able to achieve. In the competitive side, the Boomers' Expendibots agent was able to made it into the upper division, beating many groups of 3rd year and Masters students.
+Despite the fact that our strategist (Khoi) was only a 2nd year student at the time, the Boomers had received almost full marks for the creativity part, which very few groups was able to achieve. In the competitive side, the Boomers' Expendibots agent was able to made it into the upper division, beating many groups of 3rd year and Masters students.
+
+The overall score our team received was 18. Despite being informed that Boomers went into upper division, the statistics for 2020 was not revealed, so the cohort's score distribution from 2016 is used to have an estimate of where we have reached (Source: Matt Farrugia's [AI project](https://github.com/matomatical/AI-projectB)):
+
+
+     0 | 
+    ...|
+     7 | 
+     8 | *
+     9 | 
+    10 | ***
+    11 | ****
+    12 | ********
+    13 | *********
+    14 | ***********
+    15 | ********
+    16 | *******
+    17 | ***
+    18 | **   <--- We are here
+    19 | *
+    20 | 
+    21 | 
+    22 | * 
+
+
 
 ## Usage
 
