@@ -65,6 +65,6 @@ The overall score our team received was 18. Despite being informed that Boomers 
 
 ## Usage
 
-You can clone this repo and try running a game, or build up your own agent. Creating an agent for a customized game will focus a lot on the formulation from the core, which in turn can help improving your strategic thinking.
+You can clone this repo and try running a game, or build up your own agent. Creating an agent for a customized game will focus a lot on formulation from the core, which in turn can really help in improving your strategic thinking.
 
-As a courtesy of Melbourne School of Computing and Information Systems, it is also notable that if you plan to use our code for your academic assignments, please be aware that you might get caught for Academic Misconduct.
+As a courtesy of Melbourne School of Computing and Information Systems, it is also notable that if you plan to use our code for academic assignments, please be aware that you might get caught for Academic Misconduct.
