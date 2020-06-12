@@ -37,7 +37,7 @@ Our full strategy evaluation can be found in [the project report](https://github
 
 As mentioned above, this package serves as the main project to The University of Melbourne's COMP30024 - Artificial Intelligence, a 3rd year Subject.
 
-Despite the fact that our strategist (Khoi) was only a 2nd year student at the time, the Boomers had received almost full marks for the creativity part, which very few groups was able to achieve. In the competitive side, the Boomers' Expendibots agent was able to made it into the upper division, beating many groups of 3rd year and Masters students.
+Despite the fact that our strategist (Khoi) was only a 2nd year student at the time, the Boomers had received almost full marks for the creativity part, which very few groups was able to achieve. In the competitive side, the Boomers' Expendibots agent was able to made it into the upper division, beating the majority of groups that mostly consists of 3rd year and Masters students.
 
 The overall score our team received was 18. Despite being informed that Boomers went into upper division, the statistics for 2020 was not revealed, so the cohort's score distribution from 2016 is used to have an estimate of where we have reached (Source: Matt Farrugia's [AI project](https://github.com/matomatical/AI-projectB)):
 
