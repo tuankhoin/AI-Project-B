@@ -61,7 +61,7 @@ The overall score our team received was 18. Despite being informed that Boomers 
     21 | 
     22 | * 
 
-
+Out of around 135 teams in the cohort, this position means that we are at roughly the top 6%.
 
 ## Usage
 
